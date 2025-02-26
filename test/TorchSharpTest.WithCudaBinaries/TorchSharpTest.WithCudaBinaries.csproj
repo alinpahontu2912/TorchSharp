@@ -4,9 +4,9 @@
     <WarningsNotAsErrors>CS8981</WarningsNotAsErrors>
     <!-- The Directory.Build.props initialize TargetFrameworks to multiple targets. We have to clear that out to set only the targets we support. -->
     <TargetFrameworks></TargetFrameworks>
-    <TargetFrameworks Condition="'$(SkipNetCoreBuild)' != 'true'">net8.0</TargetFrameworks>
+    <TargetFrameworks Condition="'$(SkipNetCoreBuild)' != 'true'">netstandard2.0</TargetFrameworks>
     <TargetFrameworks Condition="'$(OS)' == 'Windows_NT' And '$(SkipNetFxBuild)' != 'true'">net472;$(TargetFrameworks)</TargetFrameworks>
-    <TargetFrameworks Condition="'$(TargetFrameworks)' == ''">net8.0</TargetFrameworks>
+    <TargetFrameworks Condition="'$(TargetFrameworks)' == ''">netstandard2.0</TargetFrameworks>
     <TestUsesLibTorch>true</TestUsesLibTorch>
     <TestCuda>true</TestCuda>
     <IsPackable>false</IsPackable>
@@ -149,7 +149,7 @@
 
   <ItemGroup>
     <PackageReference Update="xunit" Version="2.4.2" />
-    <PackageReference Update="xunit.runner.visualstudio" Version="2.4.5">
+    <PackageReference Update="xunit.runner.visualstudio" Version="3.0.2">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
