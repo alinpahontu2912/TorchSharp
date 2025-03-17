@@ -12,6 +12,7 @@ namespace TorchSharp
         /// </summary>
         public static Tensor zeros(long[] size, ScalarType? dtype = null, Device? device = null, bool requires_grad = false, string[]? names = null)
         {
+            InitializeDevice(device);
             return _zeros(size, dtype, device, requires_grad, names: names);
         }
 
@@ -20,6 +21,7 @@ namespace TorchSharp
         /// </summary>
         public static Tensor zeros(ReadOnlySpan<long> size, ScalarType? dtype = null, Device? device = null, bool requires_grad = false, string[]? names = null)
         {
+            InitializeDevice(device);
             return _zeros(size, dtype, device, requires_grad, names: names);
         }
 
@@ -28,6 +30,7 @@ namespace TorchSharp
         /// </summary>
         public static Tensor zeros(long size, ScalarType? dtype = null, Device? device = null, bool requires_grad = false, string[]? names = null)
         {
+            InitializeDevice(device);
             return _zeros(stackalloc long[] { size }, dtype, device, requires_grad, names: names);
         }
 
@@ -36,6 +39,7 @@ namespace TorchSharp
         /// </summary>
         public static Tensor zeros(long rows, long columns, ScalarType? dtype = null, Device? device = null, bool requires_grad = false, string[]? names = null)
         {
+            InitializeDevice(device);
             return _zeros(stackalloc long[] { rows, columns }, dtype, device, requires_grad, names: names);
         }
 
@@ -44,6 +48,7 @@ namespace TorchSharp
         /// </summary>
         public static Tensor zeros(long dim0, long dim1, long dim2, ScalarType? dtype = null, Device? device = null, bool requires_grad = false, string[]? names = null)
         {
+            InitializeDevice(device);
             return _zeros(stackalloc long[] { dim0, dim1, dim2 }, dtype, device, requires_grad, names: names);
         }
 
@@ -52,6 +57,7 @@ namespace TorchSharp
         /// </summary>
         public static Tensor zeros(long dim0, long dim1, long dim2, long dim3, ScalarType? dtype = null, Device? device = null, bool requires_grad = false, string[]? names = null)
         {
+            InitializeDevice(device);
             return _zeros(stackalloc long[] { dim0, dim1, dim2, dim3 }, dtype, device, requires_grad, names: names);
         }
 
@@ -60,6 +66,7 @@ namespace TorchSharp
         /// </summary>
         public static Tensor zeros(int size, ScalarType? dtype = null, Device? device = null, bool requires_grad = false, string[]? names = null)
         {
+            InitializeDevice(device);
             return _zeros(stackalloc long[] { size }, dtype, device, requires_grad, names: names);
         }
 
@@ -68,6 +75,7 @@ namespace TorchSharp
         /// </summary>
         public static Tensor zeros(int rows, int columns, ScalarType? dtype = null, Device? device = null, bool requires_grad = false, string[]? names = null)
         {
+            InitializeDevice(device);
             return _zeros(stackalloc long[] { rows, columns }, dtype, device, requires_grad, names: names);
         }
 
@@ -76,6 +84,7 @@ namespace TorchSharp
         /// </summary>
         public static Tensor zeros(int dim0, int dim1, int dim2, ScalarType? dtype = null, Device? device = null, bool requires_grad = false, string[]? names = null)
         {
+            InitializeDevice(device);
             return _zeros(stackalloc long[] { dim0, dim1, dim2 }, dtype, device, requires_grad, names: names);
         }
 
@@ -84,6 +93,7 @@ namespace TorchSharp
         /// </summary>
         public static Tensor zeros(int dim0, int dim1, int dim2, int dim3, ScalarType? dtype = null, Device? device = null, bool requires_grad = false, string[]? names = null)
         {
+            InitializeDevice(device);
             return _zeros(stackalloc long[] { dim0, dim1, dim2, dim3 }, dtype, device, requires_grad, names: names);
         }
 
