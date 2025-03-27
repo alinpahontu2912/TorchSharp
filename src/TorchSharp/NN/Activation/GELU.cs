@@ -14,14 +14,15 @@ namespace TorchSharp
         /// </summary>
         public sealed class GELU : ParameterLessModule<Tensor, Tensor>
         {
-            internal GELU(bool inplace) : base(nameof(GELU))
+            internal GELU(string approximate, bool inplace) : base(nameof(GELU))
             {
+                this.approximate = approximate;
                 this.inplace = inplace;
             }
 
             public override Tensor forward(Tensor tensor)
             {
-                return torch.nn.functional.gelu(tensor, inplace);
+                return torch.nn.functional.gelu(tensor, approximate, inplace);
             }
 
             public bool inplace {get; set; }
@@ -56,9 +57,9 @@ namespace TorchSharp
                 /// </summary>
                 /// <param name="x">The input tensor</param>
                 /// <param name="inplace">Do the operation in-place. Default: False</param>
-                public static Tensor gelu(Tensor x, bool inplace)
+                public static Tensor gelu(Tensor x, bool inplace, string approximate = "none")
                 {
-                    return inplace ? x.gelu_().alias() : x.gelu();
+                    return inplace ? x.gelu_(approximate).alias() : x.gelu(approximate);
                 }
 
                 /// <summary>
@@ -66,9 +67,15 @@ namespace TorchSharp
                 /// </summary>
                 /// <param name="x">The input tensor</param>
                 /// <remarks>The defaulting of 'inplace' to 'false' is implemented as an overload to avoid a breaking change.</remarks>
-                public static Tensor gelu(Tensor x)
+                public static Tensor gelu(Tensor x, string approximate = "none")
                 {
-                    return gelu(x,false);
+                    if (approximate?.Equals("none") == true) {
+                        return gelu(x, false);
+                    } else if (approximate?.Equals("tanh") == true) {
+                        return gelu(x, false, approximate);
+                    } else {
+                        throw new ArgumentException($"Unknown approximation method: {approximate}");
+                    }
                 }
             }
         }

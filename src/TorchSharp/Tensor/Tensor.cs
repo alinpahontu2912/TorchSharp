@@ -2831,17 +2831,17 @@ namespace TorchSharp
                 return this;
             }
 
-            public Tensor gelu()
+            public Tensor gelu(string approximate)
             {
-                var res = NativeMethods.THSTensor_gelu(Handle);
+                var res = NativeMethods.THSTensor_gelu(Handle, approximate);
                 if (res == IntPtr.Zero)
                     CheckForErrors();
                 return new Tensor(res);
             }
 
-            public Tensor gelu_()
+            public Tensor gelu_(string approximate)
             {
-                var res = NativeMethods.THSTensor_gelu_(Handle);
+                var res = NativeMethods.THSTensor_gelu_(Handle, approximate);
                 if (res == IntPtr.Zero)
                     CheckForErrors();
                 return new Tensor(res);
