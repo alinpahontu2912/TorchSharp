@@ -495,7 +495,8 @@ jobs:
 
   - pwsh: |
       .\sign code azure-key-vault `
-      "$(Pipeline.Workspace)/BuildTorchSharpPackages/**/*.nupkg" `
+	  "/**/*.nupkg" `
+      --base-directory "$(Pipeline.Workspace)/BuildTorchSharpPackages" `
       --azure-key-vault-url "$(SignVaultURL)" `
       --azure-key-vault-certificate "$(SignCertFriendlyName)" `
       --publisher-name "TorchSharp" `
@@ -542,7 +543,8 @@ jobs:
 
   - pwsh: |
       .\sign code azure-key-vault `
-      "$(Pipeline.Workspace)/BuildWinCUDAPackages/**/*.nupkg" `
+	  "**/*.nupkg" `
+      --base-directory "$(Pipeline.Workspace)/BuildWinCUDAPackages" `
       --azure-key-vault-url "$(SignVaultURL)" `
       --azure-key-vault-certificate "$(SignCertFriendlyName)" `
       --publisher-name "TorchSharp" `
@@ -565,7 +567,8 @@ jobs:
 
   - pwsh: |
       .\sign code azure-key-vault `
-      "$(Pipeline.Workspace)/BuildLinuxCUDAPackages/**/*.nupkg" `
+	  "**/*.nupkg" `
+      --base-directory "$(Pipeline.Workspace)/BuildLinuxCUDAPackages" `
       --azure-key-vault-url "$(SignVaultURL)" `
       --azure-key-vault-certificate "$(SignCertFriendlyName)" `
       --publisher-name "TorchSharp" `
