@@ -503,7 +503,7 @@ jobs:
       --description "TorchSharp" `
       --description-url "https://github.com/dotnet/TorchSharp" `
       --verbosity information
-    displayName: Sign packages
+  displayName: Sign packages
 
   - publish: $(Pipeline.Workspace)/BuildTorchSharpPackages
     displayName: Publish Signed TorchSharp Packages
@@ -551,7 +551,7 @@ jobs:
       --description "TorchSharp" `
       --description-url "https://github.com/dotnet/TorchSharp" `
       --verbosity information
-    displayName: Sign packages
+  displayName: Sign packages
 
   - publish: $(Pipeline.Workspace)/BuildWinCUDAPackages
     displayName: Publish Signed Windows CUDA Packages
@@ -575,7 +575,7 @@ jobs:
       --description "TorchSharp" `
       --description-url "https://github.com/dotnet/TorchSharp" `
       --verbosity information
-    displayName: Sign packages
+  displayName: Sign packages
 
   - publish: $(Pipeline.Workspace)/BuildLinuxCUDAPackages
     displayName: Publish Signed Linux CUDA Packages
