@@ -497,11 +497,11 @@ jobs:
       .\sign code azure-key-vault `
       --base-directory "$(Pipeline.Workspace)/BuildTorchSharpPackages" `
       --file-list "**/*.nupkg" `
-      --azure-key-vault-url "$(KeyVaultUrl)" `
-      --azure-key-vault-tenant-id "$(TenantId)" `
-      --azure-key-vault-client-id "$(SignClientUser)" `
+      --azure-key-vault-url "$(SignVaultURL)" `
+      --azure-key-vault-tenant-id "$(SignTenantId)" `
+      --azure-key-vault-client-id "$(SignClientId)" `
       --azure-key-vault-client-secret "$(SignClientSecret)" `
-      --azure-key-vault-certificate "$(CertificateName)" `
+      --azure-key-vault-certificate "$(SignCertFriendlyName)" `
       --publisher-name "TorchSharp" `
       --description "TorchSharp" `
       --description-url "https://github.com/dotnet/TorchSharp" `
@@ -548,11 +548,11 @@ jobs:
       .\sign code azure-key-vault `
       --base-directory "$(Pipeline.Workspace)/BuildTorchSharpPackages" `
       --file-list "**/*.nupkg" `
-      --azure-key-vault-url "$(KeyVaultUrl)" `
-      --azure-key-vault-tenant-id "$(TenantId)" `
-      --azure-key-vault-client-id "$(SignClientUser)" `
+      --azure-key-vault-url "$(SignVaultURL)" `
+      --azure-key-vault-tenant-id "$(SignTenantId)" `
+      --azure-key-vault-client-id "$(SignClientId)" `
       --azure-key-vault-client-secret "$(SignClientSecret)" `
-      --azure-key-vault-certificate "$(CertificateName)" `
+      --azure-key-vault-certificate "$(SignCertFriendlyName)" `
       --publisher-name "TorchSharp" `
       --description "TorchSharp" `
       --description-url "https://github.com/dotnet/TorchSharp" `
@@ -575,11 +575,11 @@ jobs:
       .\sign code azure-key-vault `
       --base-directory "$(Pipeline.Workspace)/BuildTorchSharpPackages" `
       --file-list "**/*.nupkg" `
-      --azure-key-vault-url "$(KeyVaultUrl)" `
-      --azure-key-vault-tenant-id "$(TenantId)" `
-      --azure-key-vault-client-id "$(SignClientUser)" `
+      --azure-key-vault-url "$(SignVaultURL)" `
+      --azure-key-vault-tenant-id "$(SignTenantId)" `
+      --azure-key-vault-client-id "$(SignClientId)" `
       --azure-key-vault-client-secret "$(SignClientSecret)" `
-      --azure-key-vault-certificate "$(CertificateName)" `
+      --azure-key-vault-certificate "$(SignCertFriendlyName)" `
       --publisher-name "TorchSharp" `
       --description "TorchSharp" `
       --description-url "https://github.com/dotnet/TorchSharp" `
