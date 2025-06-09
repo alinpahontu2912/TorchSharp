@@ -498,9 +498,6 @@ jobs:
       --base-directory "$(Pipeline.Workspace)/BuildTorchSharpPackages" `
       --file-list "**/*.nupkg" `
       --azure-key-vault-url "$(SignVaultURL)" `
-      --azure-key-vault-tenant-id "$(SignTenantId)" `
-      --azure-key-vault-client-id "$(SignClientId)" `
-      --azure-key-vault-client-secret "$(SignClientSecret)" `
       --azure-key-vault-certificate "$(SignCertFriendlyName)" `
       --publisher-name "TorchSharp" `
       --description "TorchSharp" `
@@ -549,9 +546,6 @@ jobs:
       --base-directory "$(Pipeline.Workspace)/BuildTorchSharpPackages" `
       --file-list "**/*.nupkg" `
       --azure-key-vault-url "$(SignVaultURL)" `
-      --azure-key-vault-tenant-id "$(SignTenantId)" `
-      --azure-key-vault-client-id "$(SignClientId)" `
-      --azure-key-vault-client-secret "$(SignClientSecret)" `
       --azure-key-vault-certificate "$(SignCertFriendlyName)" `
       --publisher-name "TorchSharp" `
       --description "TorchSharp" `
@@ -576,9 +570,6 @@ jobs:
       --base-directory "$(Pipeline.Workspace)/BuildTorchSharpPackages" `
       --file-list "**/*.nupkg" `
       --azure-key-vault-url "$(SignVaultURL)" `
-      --azure-key-vault-tenant-id "$(SignTenantId)" `
-      --azure-key-vault-client-id "$(SignClientId)" `
-      --azure-key-vault-client-secret "$(SignClientSecret)" `
       --azure-key-vault-certificate "$(SignCertFriendlyName)" `
       --publisher-name "TorchSharp" `
       --description "TorchSharp" `
