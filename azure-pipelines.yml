@@ -494,15 +494,12 @@ jobs:
     artifact: BuildTorchSharpPackages
 
   - pwsh: |
-     $config = Get-Content "$(Pipeline.Workspace)/config/SignClient.json" | ConvertFrom-Json
-     $tenantId = $config.SignClient.AzureAd.TenantId
-     $clientId = $config.SignClient.AzureAd.ClientId  
     .\sign code azure-key-vault `
     --base-directory "$(Pipeline.Workspace)/BuildTorchSharpPackages" `
     --file-list "**/*.nupkg" `
     --azure-key-vault-url "$(KeyVaultUrl)" `
-    --azure-key-vault-tenant-id $tenantId `
-    --azure-key-vault-client-id $clientId `
+    --azure-key-vault-tenant-id "$(TenantId)" `
+    --azure-key-vault-client-id "$(SignClientUser)" `
     --azure-key-vault-client-secret "$(SignClientSecret)" `
     --azure-key-vault-certificate "$(CertificateName)" `
     --publisher-name "TorchSharp" `
@@ -548,21 +545,18 @@ jobs:
     artifact: BuildWinCUDAPackages
 
   - pwsh: |
-     $config = Get-Content "$(Pipeline.Workspace)/config/SignClient.json" | ConvertFrom-Json
-     $tenantId = $config.SignClient.AzureAd.TenantId
-     $clientId = $config.SignClient.AzureAd.ClientId 
-	  .\sign code azure-key-vault `
-	  --base-directory "$(Pipeline.Workspace)/BuildTorchSharpPackages" `
-	  --file-list "**/*.nupkg" `
-	  --azure-key-vault-url "$(KeyVaultUrl)" `
-	  --azure-key-vault-tenant-id $tenantId `
-	  --azure-key-vault-client-id $clientId `
-	  --azure-key-vault-client-secret "$(SignClientSecret)" `
-	  --azure-key-vault-certificate "$(CertificateName)" `
-	  --publisher-name "TorchSharp" `
-	  --description "TorchSharp" `
-	  --description-url "https://github.com/dotnet/TorchSharp" `
-	  --verbosity information
+    .\sign code azure-key-vault `
+    --base-directory "$(Pipeline.Workspace)/BuildTorchSharpPackages" `
+    --file-list "**/*.nupkg" `
+    --azure-key-vault-url "$(KeyVaultUrl)" `
+    --azure-key-vault-tenant-id "$(TenantId)" `
+    --azure-key-vault-client-id "$(SignClientUser)" `
+    --azure-key-vault-client-secret "$(SignClientSecret)" `
+    --azure-key-vault-certificate "$(CertificateName)" `
+    --publisher-name "TorchSharp" `
+    --description "TorchSharp" `
+    --description-url "https://github.com/dotnet/TorchSharp" `
+    --verbosity information
     displayName: Sign packages
 
   - publish: $(Pipeline.Workspace)/BuildWinCUDAPackages
@@ -578,21 +572,18 @@ jobs:
     artifact: BuildLinuxCUDAPackages
 
   - pwsh: |
-     $config = Get-Content "$(Pipeline.Workspace)/config/SignClient.json" | ConvertFrom-Json
-     $tenantId = $config.SignClient.AzureAd.TenantId
-     $clientId = $config.SignClient.AzureAd.ClientId    
-	  .\sign code azure-key-vault `
-	  --base-directory "$(Pipeline.Workspace)/BuildTorchSharpPackages" `
-	  --file-list "**/*.nupkg" `
-	  --azure-key-vault-url "$(KeyVaultUrl)" `
-	  --azure-key-vault-tenant-id $tenantId `
-	  --azure-key-vault-client-id $clientId `
-	  --azure-key-vault-client-secret "$(SignClientSecret)" `
-	  --azure-key-vault-certificate "$(CertificateName)" `
-	  --publisher-name "TorchSharp" `
-	  --description "TorchSharp" `
-	  --description-url "https://github.com/dotnet/TorchSharp" `
-	  --verbosity information
+    .\sign code azure-key-vault `
+    --base-directory "$(Pipeline.Workspace)/BuildTorchSharpPackages" `
+    --file-list "**/*.nupkg" `
+    --azure-key-vault-url "$(KeyVaultUrl)" `
+    --azure-key-vault-tenant-id "$(TenantId)" `
+    --azure-key-vault-client-id "$(SignClientUser)" `
+    --azure-key-vault-client-secret "$(SignClientSecret)" `
+    --azure-key-vault-certificate "$(CertificateName)" `
+    --publisher-name "TorchSharp" `
+    --description "TorchSharp" `
+    --description-url "https://github.com/dotnet/TorchSharp" `
+    --verbosity information
     displayName: Sign packages
 
   - publish: $(Pipeline.Workspace)/BuildLinuxCUDAPackages
