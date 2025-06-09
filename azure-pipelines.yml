@@ -496,14 +496,14 @@ jobs:
   - pwsh: |
       .\sign code azure-key-vault `
       "**/*.nupkg" `
-      --base-directory "$(Pipeline.Workspace)\BuildTorchSharpPackages" `
-      --azure-key-vault-url "$(SignVaultURL)" `
-      --azure-key-vault-certificate "$(SignCertFriendlyName)" `
-	  --azure-key-vault-client-secret '$(SignClientSecret)' `
+      --base-directory '$(Pipeline.Workspace)\BuildTorchSharpPackages' `
       --publisher-name "TorchSharp" `
       --description "TorchSharp" `
       --description-url "https://github.com/dotnet/TorchSharp" `
-     displayName: Sign packages
+      --azure-key-vault-client-secret '$(SignClientSecret)' `
+      --azure-key-vault-certificate "$(SignCertFriendlyName)" `
+      --azure-key-vault-url "$(SignVaultURL)"
+    displayName: Sign packages
 
   - publish: $(Pipeline.Workspace)/BuildTorchSharpPackages
     displayName: Publish Signed TorchSharp Packages
@@ -544,13 +544,13 @@ jobs:
   - pwsh: |
       .\sign code azure-key-vault `
       "**/*.nupkg" `
-      --base-directory "$(Pipeline.Workspace)\BuildWinCUDAPackages" `
-      --azure-key-vault-url "$(SignVaultURL)" `
-      --azure-key-vault-certificate "$(SignCertFriendlyName)" `
-	  --azure-key-vault-client-secret '$(SignClientSecret)' `
+      --base-directory '$(Pipeline.Workspace)\BuildWinCUDAPackages' `
       --publisher-name "TorchSharp" `
       --description "TorchSharp" `
       --description-url "https://github.com/dotnet/TorchSharp" `
+      --azure-key-vault-client-secret '$(SignClientSecret)' `
+      --azure-key-vault-certificate "$(SignCertFriendlyName)" `
+      --azure-key-vault-url "$(SignVaultURL)"
     displayName: Sign packages
 
   - publish: $(Pipeline.Workspace)/BuildWinCUDAPackages
@@ -568,13 +568,13 @@ jobs:
   - pwsh: |
       .\sign code azure-key-vault `
       "**/*.nupkg" `
-      --base-directory "$(Pipeline.Workspace)\BuildLinuxCUDAPackages" `
-      --azure-key-vault-url "$(SignVaultURL)" `
-      --azure-key-vault-certificate "$(SignCertFriendlyName)" `
-	  --azure-key-vault-client-secret '$(SignClientSecret)' `
+      --base-directory '$(Pipeline.Workspace)\BuildLinuxCUDAPackages' `
       --publisher-name "TorchSharp" `
       --description "TorchSharp" `
       --description-url "https://github.com/dotnet/TorchSharp" `
+      --azure-key-vault-client-secret '$(SignClientSecret)' `
+      --azure-key-vault-certificate "$(SignCertFriendlyName)" `
+      --azure-key-vault-url "$(SignVaultURL)"
     displayName: Sign packages
 
   - publish: $(Pipeline.Workspace)/BuildLinuxCUDAPackages
