@@ -494,11 +494,14 @@ jobs:
     artifact: BuildTorchSharpPackages
 
   - pwsh: |
-      .\sign code `
+      .\sign code azure-key-vault `
       "**/*.nupkg" `
       --base-directory "$(Pipeline.Workspace)\BuildTorchSharpPackages" `
       --azure-key-vault-url "$(SignVaultURL)" `
       --azure-key-vault-certificate "$(SignCertFriendlyName)" `
+	  --azure-key-vault-tenant-id "$(SignTenantId)" `
+	  --azure-key-vault-client-id "$(SignClientId)" `
+	  --azure-key-vault-client-secret '$(SignClientSecret)' `
       --publisher-name "TorchSharp" `
       --description "TorchSharp" `
       --description-url "https://github.com/dotnet/TorchSharp" `
@@ -541,11 +544,14 @@ jobs:
     artifact: BuildWinCUDAPackages
 
   - pwsh: |
-      .\sign code `
+      .\sign code azure-key-vault `
       "**/*.nupkg" `
       --base-directory "$(Pipeline.Workspace)\BuildWinCUDAPackages" `
       --azure-key-vault-url "$(SignVaultURL)" `
       --azure-key-vault-certificate "$(SignCertFriendlyName)" `
+	  --azure-key-vault-tenant-id "$(SignTenantId)" `
+	  --azure-key-vault-client-id "$(SignClientId)" `
+	  --azure-key-vault-client-secret '$(SignClientSecret)' `
       --publisher-name "TorchSharp" `
       --description "TorchSharp" `
       --description-url "https://github.com/dotnet/TorchSharp" `
@@ -564,11 +570,14 @@ jobs:
     artifact: BuildLinuxCUDAPackages
 
   - pwsh: |
-      .\sign code `
+      .\sign code azure-key-vault `
       "**/*.nupkg" `
       --base-directory "$(Pipeline.Workspace)\BuildLinuxCUDAPackages" `
       --azure-key-vault-url "$(SignVaultURL)" `
       --azure-key-vault-certificate "$(SignCertFriendlyName)" `
+	  --azure-key-vault-tenant-id "$(SignTenantId)" `
+	  --azure-key-vault-client-id "$(SignClientId)" `
+	  --azure-key-vault-client-secret '$(SignClientSecret)' `
       --publisher-name "TorchSharp" `
       --description "TorchSharp" `
       --description-url "https://github.com/dotnet/TorchSharp" `
