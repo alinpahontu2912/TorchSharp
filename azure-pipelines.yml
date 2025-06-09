@@ -493,7 +493,7 @@ jobs:
     displayName: Download TorchSharp Packages
     artifact: BuildTorchSharpPackages
 
-- pwsh: |
+  - pwsh: |
     .\sign code azure-key-vault `
       "**/*.nupkg" `
       --base-directory "$(Pipeline.Workspace)\BuildTorchSharpPackages" `
@@ -503,7 +503,7 @@ jobs:
       --description "TorchSharp" `
       --description-url "https://github.com/dotnet/TorchSharp" `
       --verbosity information
-  displayName: Sign packages
+    displayName: Sign packages
 
   - publish: $(Pipeline.Workspace)/BuildTorchSharpPackages
     displayName: Publish Signed TorchSharp Packages
@@ -541,7 +541,7 @@ jobs:
     displayName: Download Windows CUDA Packages
     artifact: BuildWinCUDAPackages
 
-- pwsh: |
+  - pwsh: |
     .\sign code azure-key-vault `
       "**/*.nupkg" `
       --base-directory "$(Pipeline.Workspace)\BuildWinCUDAPackages" `
@@ -551,7 +551,7 @@ jobs:
       --description "TorchSharp" `
       --description-url "https://github.com/dotnet/TorchSharp" `
       --verbosity information
-  displayName: Sign packages
+    displayName: Sign packages
 
   - publish: $(Pipeline.Workspace)/BuildWinCUDAPackages
     displayName: Publish Signed Windows CUDA Packages
@@ -565,7 +565,7 @@ jobs:
     displayName: Download Linux CUDA Packages
     artifact: BuildLinuxCUDAPackages
 
-- pwsh: |
+  - pwsh: |
     .\sign code azure-key-vault `
       "**/*.nupkg" `
       --base-directory "$(Pipeline.Workspace)\BuildLinuxCUDAPackages" `
@@ -575,7 +575,7 @@ jobs:
       --description "TorchSharp" `
       --description-url "https://github.com/dotnet/TorchSharp" `
       --verbosity information
-  displayName: Sign packages
+    displayName: Sign packages
 
   - publish: $(Pipeline.Workspace)/BuildLinuxCUDAPackages
     displayName: Publish Signed Linux CUDA Packages
