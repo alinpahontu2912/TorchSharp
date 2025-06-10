@@ -498,8 +498,7 @@ jobs:
     inputs:
       targetType: 'inline'
       script: |
-        .\sign code azure-key-vault `
-		  "**/*.nupkg" `
+        .\sign code azure-key-vault **/*.nupkg `
           --base-directory "$(Pipeline.Workspace)\BuildTorchSharpPackages" `
           --file-list "**/*.nupkg" `
           --azure-key-vault-url "$(SignVaultURL)"
@@ -568,8 +567,7 @@ jobs:
     inputs:
       targetType: 'inline'
       script: |
-        .\sign code azure-key-vault `
-		  "**/*.nupkg" `
+        .\sign code azure-key-vault **/*.nupkg `
           --base-directory "$(Pipeline.Workspace)\BuildWinCUDAPackages" `
           --file-list "**/*.nupkg" `
           --publisher-name "TorchSharp" `
@@ -612,8 +610,7 @@ jobs:
     inputs:
       targetType: 'inline'
       script: |
-        .\sign code azure-key-vault `
-		  "**/*.nupkg" `
+        .\sign code azure-key-vault **/*.nupkg `
           --base-directory "$(Pipeline.Workspace)\BuildLinuxCUDAPackages" `
           --file-list "**/*.nupkg" `
           --publisher-name "TorchSharp" `
