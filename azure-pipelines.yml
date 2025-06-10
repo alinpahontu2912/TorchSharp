@@ -499,8 +499,10 @@ jobs:
       targetType: 'inline'
       script: |
         .\sign code azure-key-vault `
+		  "**/*.nupkg" `
           --base-directory "$(Pipeline.Workspace)\BuildTorchSharpPackages" `
           --file-list "**/*.nupkg" `
+          --azure-key-vault-url "$(SignVaultURL)"
           --publisher-name "TorchSharp" `
           --description "TorchSharp" `
           --description-url "https://github.com/dotnet/TorchSharp" `
@@ -508,7 +510,7 @@ jobs:
           --azure-key-vault-client-id "$(SignClientId)" `
           --azure-key-vault-client-secret "$(SignClientSecret)" `
           --azure-key-vault-certificate "$(SignCertFriendlyName)" `
-          --azure-key-vault-url "$(SignVaultURL)"
+
 
   # - pwsh: |
   #    $args = @(
@@ -567,6 +569,7 @@ jobs:
       targetType: 'inline'
       script: |
         .\sign code azure-key-vault `
+		  "**/*.nupkg" `
           --base-directory "$(Pipeline.Workspace)\BuildWinCUDAPackages" `
           --file-list "**/*.nupkg" `
           --publisher-name "TorchSharp" `
@@ -610,6 +613,7 @@ jobs:
       targetType: 'inline'
       script: |
         .\sign code azure-key-vault `
+		  "**/*.nupkg" `
           --base-directory "$(Pipeline.Workspace)\BuildLinuxCUDAPackages" `
           --file-list "**/*.nupkg" `
           --publisher-name "TorchSharp" `
