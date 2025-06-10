@@ -501,7 +501,7 @@ jobs:
         & .\sign code azure-key-vault **/*.nupkg
           --base-directory "$(Pipeline.Workspace)\BuildTorchSharpPackages" `
           --file-list "$(Pipeline.Workspace)\config\signedfiles.txt" `
-          --azure-key-vault-url "$(SignVaultURL)"
+          --azure-key-vault-url "$(SignVaultURL)" `
           --publisher-name "TorchSharp" `
           --description "TorchSharp" `
           --description-url "https://github.com/dotnet/TorchSharp" `
@@ -569,7 +569,7 @@ jobs:
         & .\sign code azure-key-vault **/*.nupkg
           --base-directory "$(Pipeline.Workspace)\BuildWinCUDAPackages" `
           --file-list "$(Pipeline.Workspace)\config\signedfiles.txt" `
-          --azure-key-vault-url "$(SignVaultURL)"
+          --azure-key-vault-url "$(SignVaultURL)" `
           --publisher-name "TorchSharp" `
           --description "TorchSharp" `
           --description-url "https://github.com/dotnet/TorchSharp" `
@@ -614,7 +614,7 @@ jobs:
         & .\sign code azure-key-vault **/*.nupkg
           --base-directory "$(Pipeline.Workspace)\BuildLinuxCUDAPackages" `
           --file-list "$(Pipeline.Workspace)\config\signedfiles.txt" `
-          --azure-key-vault-url "$(SignVaultURL)"
+          --azure-key-vault-url "$(SignVaultURL)" `
           --publisher-name "TorchSharp" `
           --description "TorchSharp" `
           --description-url "https://github.com/dotnet/TorchSharp" `
