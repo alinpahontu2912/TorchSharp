@@ -493,20 +493,37 @@ jobs:
     displayName: Download TorchSharp Packages
     artifact: BuildTorchSharpPackages
 
-  - pwsh: |
-     $args = @(
-     "code", "azure-key-vault",
-      "**/*.nupkg",
-      "--base-directory", "$(Pipeline.Workspace)\BuildTorchSharpPackages",
-      "--azure-key-vault-url", "$(SignVaultURL)",
-      "--azure-key-vault-certificate", "$(SignCertFriendlyName)",
-      "--publisher-name", "TorchSharp",
-      "--description", "TorchSharp",
-      "--description-url", "https://github.com/dotnet/TorchSharp",
-      "--verbosity", "information"
-     )
-     & .\sign @args
-    displayName: Sign packages
+  - task: PowerShell@2
+    displayName: Sign packages with Sign CLI
+    inputs:
+      targetType: 'inline'
+      script: |
+        .\sign code azure-key-vault `
+          --base-directory "$(Pipeline.Workspace)\BuildTorchSharpPackages" `
+          --file-list "**/*.nupkg" `
+          --publisher-name "TorchSharp" `
+          --description "TorchSharp" `
+          --description-url "https://github.com/dotnet/TorchSharp" `
+          --azure-key-vault-tenant-id "$(SignTenantId)" `
+          --azure-key-vault-client-id "$(SignClientId)" `
+          --azure-key-vault-client-secret "$(SignClientSecret)" `
+          --azure-key-vault-certificate "$(SignCertFriendlyName)" `
+          --azure-key-vault-url "$(SignVaultURL)"
+
+  # - pwsh: |
+  #    $args = @(
+  #    "code", "azure-key-vault",
+  #     "**/*.nupkg",
+  #     "--base-directory", "$(Pipeline.Workspace)\BuildTorchSharpPackages",
+  #     "--azure-key-vault-url", "$(SignVaultURL)",
+  #     "--azure-key-vault-certificate", "$(SignCertFriendlyName)",
+  #     "--publisher-name", "TorchSharp",
+  #     "--description", "TorchSharp",
+  #     "--description-url", "https://github.com/dotnet/TorchSharp",
+  #     "--verbosity", "information"
+  #    )
+  #    & .\sign @args
+  #   displayName: Sign packages
 
   - publish: $(Pipeline.Workspace)/BuildTorchSharpPackages
     displayName: Publish Signed TorchSharp Packages
@@ -544,20 +561,36 @@ jobs:
     displayName: Download Windows CUDA Packages
     artifact: BuildWinCUDAPackages
 
-  - pwsh: |
-     $args = @(
-     "code", "azure-key-vault",
-      "**/*.nupkg",
-      "--base-directory", "$(Pipeline.Workspace)\BuildWinCUDAPackages",
-      "--azure-key-vault-url", "$(SignVaultURL)",
-      "--azure-key-vault-certificate", "$(SignCertFriendlyName)",
-      "--publisher-name", "TorchSharp",
-      "--description", "TorchSharp",
-      "--description-url", "https://github.com/dotnet/TorchSharp",
-      "--verbosity", "information"
-     )
-     & .\sign @args
-    displayName: Sign packages
+  - task: PowerShell@2
+    displayName: Sign packages with Sign CLI
+    inputs:
+      targetType: 'inline'
+      script: |
+        .\sign code azure-key-vault `
+          --base-directory "$(Pipeline.Workspace)\BuildWinCUDAPackages" `
+          --file-list "**/*.nupkg" `
+          --publisher-name "TorchSharp" `
+          --description "TorchSharp" `
+          --description-url "https://github.com/dotnet/TorchSharp" `
+          --azure-key-vault-tenant-id "$(SignTenantId)" `
+          --azure-key-vault-client-id "$(SignClientId)" `
+          --azure-key-vault-client-secret "$(SignClientSecret)" `
+          --azure-key-vault-certificate "$(SignCertFriendlyName)" `
+          --azure-key-vault-url "$(SignVaultURL)"
+  # - pwsh: |
+  #    $args = @(
+  #    "code", "azure-key-vault",
+  #     "**/*.nupkg",
+  #     "--base-directory", "$(Pipeline.Workspace)\BuildWinCUDAPackages",
+  #     "--azure-key-vault-url", "$(SignVaultURL)",
+  #     "--azure-key-vault-certificate", "$(SignCertFriendlyName)",
+  #     "--publisher-name", "TorchSharp",
+  #     "--description", "TorchSharp",
+  #     "--description-url", "https://github.com/dotnet/TorchSharp",
+  #     "--verbosity", "information"
+  #    )
+  #    & .\sign @args
+  #   displayName: Sign packages
 
   - publish: $(Pipeline.Workspace)/BuildWinCUDAPackages
     displayName: Publish Signed Windows CUDA Packages
@@ -571,20 +604,36 @@ jobs:
     displayName: Download Linux CUDA Packages
     artifact: BuildLinuxCUDAPackages
 
-  - pwsh: |
-     $args = @(
-     "code", "azure-key-vault",
-      "**/*.nupkg",
-      "--base-directory", "$(Pipeline.Workspace)\BuildLinuxCUDAPackages",
-      "--azure-key-vault-url", "$(SignVaultURL)",
-      "--azure-key-vault-certificate", "$(SignCertFriendlyName)",
-      "--publisher-name", "TorchSharp",
-      "--description", "TorchSharp",
-      "--description-url", "https://github.com/dotnet/TorchSharp",
-      "--verbosity", "information"
-     )
-     & .\sign @args
-    displayName: Sign packages
+  - task: PowerShell@2
+    displayName: Sign packages with Sign CLI
+    inputs:
+      targetType: 'inline'
+      script: |
+        .\sign code azure-key-vault `
+          --base-directory "$(Pipeline.Workspace)\BuildLinuxCUDAPackages" `
+          --file-list "**/*.nupkg" `
+          --publisher-name "TorchSharp" `
+          --description "TorchSharp" `
+          --description-url "https://github.com/dotnet/TorchSharp" `
+          --azure-key-vault-tenant-id "$(SignTenantId)" `
+          --azure-key-vault-client-id "$(SignClientId)" `
+          --azure-key-vault-client-secret "$(SignClientSecret)" `
+          --azure-key-vault-certificate "$(SignCertFriendlyName)" `
+          --azure-key-vault-url "$(SignVaultURL)"
+  # - pwsh: |
+  #    $args = @(
+  #    "code", "azure-key-vault",
+  #     "**/*.nupkg",
+  #     "--base-directory", "$(Pipeline.Workspace)\BuildLinuxCUDAPackages",
+  #     "--azure-key-vault-url", "$(SignVaultURL)",
+  #     "--azure-key-vault-certificate", "$(SignCertFriendlyName)",
+  #     "--publisher-name", "TorchSharp",
+  #     "--description", "TorchSharp",
+  #     "--description-url", "https://github.com/dotnet/TorchSharp",
+  #     "--verbosity", "information"
+  #    )
+  #    & .\sign @args
+  #   displayName: Sign packages
 
   - publish: $(Pipeline.Workspace)/BuildLinuxCUDAPackages
     displayName: Publish Signed Linux CUDA Packages
