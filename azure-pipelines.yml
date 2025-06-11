@@ -506,7 +506,7 @@ jobs:
           --description "TorchSharp" `
           --description-url "https://github.com/dotnet/TorchSharp" `
           --azure-key-vault-tenant-id "16076fdc-fcc1-4a15-b1ca-32c9a255900e" `
-          --azure-key-vault-client-id "c248d68a-ba6f-4aa9-8a68-71fe872063f8" `
+          --azure-key-vault-client-id "$(SignClientId)" `
           --azure-key-vault-client-secret "$(SignClientSecret)" `
           --azure-key-vault-certificate "$(SignCertFriendlyName)"
 
@@ -559,7 +559,7 @@ jobs:
           --description "TorchSharp" `
           --description-url "https://github.com/dotnet/TorchSharp" `
           --azure-key-vault-tenant-id "16076fdc-fcc1-4a15-b1ca-32c9a255900e"  `
-          --azure-key-vault-client-id "c248d68a-ba6f-4aa9-8a68-71fe872063f8" `
+          --azure-key-vault-client-id "$(SignClientId)" `
           --azure-key-vault-client-secret "$(SignClientSecret)" `
           --azure-key-vault-certificate "$(SignCertFriendlyName)"
 
@@ -588,7 +588,7 @@ jobs:
           --description "TorchSharp" `
           --description-url "https://github.com/dotnet/TorchSharp" `
           --azure-key-vault-tenant-id "16076fdc-fcc1-4a15-b1ca-32c9a255900e"  `
-          --azure-key-vault-client-id "c248d68a-ba6f-4aa9-8a68-71fe872063f8" `
+          --azure-key-vault-client-id "$(SignClientId)" `
           --azure-key-vault-client-secret "$(SignClientSecret)" `
           --azure-key-vault-certificate "$(SignCertFriendlyName)"
 
