@@ -636,7 +636,6 @@ jobs:
       packagesToPush:  '$(Pipeline.Workspace)/**/TorchSharp.*.nupkg'
       publishVstsFeed: 'TorchSharp/TestPackages'
       allowPackageConflicts: true
-	  #publishFeedCredentials: 'NuGet.org'
     continueOnError: true
 
   - task: NuGetCommand@2
@@ -646,7 +645,6 @@ jobs:
       packagesToPush:  '$(Pipeline.Workspace)/**/TorchAudio.*.nupkg'
       publishVstsFeed: 'TorchSharp/SignedPackages'
       allowPackageConflicts: true
-	  #publishFeedCredentials: 'NuGet.org'
     continueOnError: true
 
   - task: NuGetCommand@2
@@ -656,7 +654,6 @@ jobs:
       packagesToPush:  '$(Pipeline.Workspace)/**/TorchVision.*.nupkg'
       publishVstsFeed: 'TorchSharp/SignedPackages'
       allowPackageConflicts: true
-	  #publishFeedCredentials: 'NuGet.org'
     continueOnError: true
 
   - task: NuGetCommand@2
@@ -666,7 +663,6 @@ jobs:
       packagesToPush:  '$(Pipeline.Workspace)/**/TorchSharp-*.nupkg'
       publishVstsFeed: 'TorchSharp/TestPackages'
       allowPackageConflicts: true
-	  #publishFeedCredentials: 'NuGet.org'
     continueOnError: true
 
   # push the CPU runtime packages
@@ -677,7 +673,6 @@ jobs:
       packagesToPush:  '$(Pipeline.Workspace)/**/libtorch-cpu*.nupkg'
       publishVstsFeed: 'TorchSharp/TestPackages'
       allowPackageConflicts: true
-	  #publishFeedCredentials: 'NuGet.org'
     continueOnError: true
 
   # push the CPU runtime packages (retry - we get so many failures!)
@@ -688,7 +683,6 @@ jobs:
       packagesToPush:  '$(Pipeline.Workspace)/**/libtorch-cpu*.nupkg'
       publishVstsFeed: 'TorchSharp/TestPackages'
       allowPackageConflicts: true
-	  # publishFeedCredentials: 'NuGet.org'
     continueOnError: true
 
   # push the CPU runtime packages (retry - we get so many failures!)
@@ -699,7 +693,6 @@ jobs:
       packagesToPush:  '$(Pipeline.Workspace)/**/libtorch-cpu*.nupkg'
       publishVstsFeed: 'TorchSharp/TestPackages'
       allowPackageConflicts: true
-	  #publishFeedCredentials: 'NuGet.org'
     continueOnError: true
 
   # Terminate all dotnet build processes.
