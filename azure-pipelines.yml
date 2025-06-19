@@ -590,7 +590,7 @@ jobs:
           --azure-key-vault-tenant-id "$(SignTenantId)" `
           --azure-key-vault-client-id "$(SignClientId)" `
           --azure-key-vault-client-secret "$(SignClientSecret)" `
-          --azure-key-vault-certificate "$(SignCertFriendlyName)"
+          --azure-key-vault-certificate "$(SignCertFriendlyName)" 
 
   - publish: $(Pipeline.Workspace)/BuildLinuxCUDAPackages
     displayName: Publish Signed Linux CUDA Packages
