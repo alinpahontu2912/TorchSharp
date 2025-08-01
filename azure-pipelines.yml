@@ -232,7 +232,7 @@ jobs:
   - task: DownloadPipelineArtifact@2
     inputs:
       artifact: LinuxAssets
-      path: $(Pipeline.Workspace)
+      path: $(Pipeline.Workspace)/LinuxAssets/TorchSharp
     timeoutInMinutes: 5
 
   - task: CopyFiles@2
@@ -266,7 +266,7 @@ jobs:
   - task: DownloadPipelineArtifact@2
     inputs:
       artifact: MacAssets_arm64
-      path: $(Pipeline.Workspace)
+      path: $(Pipeline.Workspace)/MacAssets_arm64/TorchSharp
     timeoutInMinutes: 5
 
   - task: CopyFiles@2
@@ -299,7 +299,7 @@ jobs:
   - task: DownloadPipelineArtifact@2
     inputs:
       artifact: WindowsAssets
-      path: $(Pipeline.Workspace)
+      path: $(Pipeline.Workspace)/WindowsAssets/TorchSharp
     timeoutInMinutes: 5
 
   - task: CopyFiles@2
@@ -381,7 +381,7 @@ jobs:
   - task: DownloadPipelineArtifact@2
     inputs:
       artifact: WindowsAssets
-      path: $(Pipeline.Workspace)
+      path: $(Pipeline.Workspace)/WindowsAssets
     timeoutInMinutes: 5
 
   - task: CopyFiles@2
@@ -451,7 +451,7 @@ jobs:
   - task: DownloadPipelineArtifact@2
     inputs:
       artifact: LinuxAssets
-      path: $(Pipeline.Workspace)
+      path: $(Pipeline.Workspace)/LinuxAssets
     timeoutInMinutes: 5
 
   - task: CopyFiles@2
