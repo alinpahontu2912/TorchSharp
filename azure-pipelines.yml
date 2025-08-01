@@ -229,8 +229,11 @@ jobs:
     continueOnError: true
 
     # Download all bits contributing to the packages from the Linux build
-  - download: current
-    artifact: LinuxAssets
+  - task: DownloadPipelineArtifact@2
+    inputs:
+      artifact: LinuxAssets
+      path: $(Pipeline.Workspace)
+    timeoutInMinutes: 5
 
   - task: CopyFiles@2
     displayName: Copy linux native assets (TorchSharp) to correct folder where the bits contributing to the packages are assembled
@@ -260,8 +263,11 @@ jobs:
     displayName: Free up space (LinuxAssets in workspace)
 
     # Download all bits contributing to the packages from the Mac build
-  - download: current
-    artifact: MacAssets_arm64
+  - task: DownloadPipelineArtifact@2
+    inputs:
+      artifact: MacAssets_arm64
+      path: $(Pipeline.Workspace)
+    timeoutInMinutes: 5
 
   - task: CopyFiles@2
     displayName: Copy mac-arm64 native assets (TorchSharp) to correct folder where the bits contributing to the packages are assembled
@@ -290,8 +296,11 @@ jobs:
   - script: rmdir /s /q  $(Pipeline.Workspace)\MacAssets_arm64
     displayName: Free up space (MacAssets_arm64 in workspace)
 
-  - download: current
-    artifact: WindowsAssets
+  - task: DownloadPipelineArtifact@2
+    inputs:
+      artifact: WindowsAssets
+      path: $(Pipeline.Workspace)
+    timeoutInMinutes: 5
 
   - task: CopyFiles@2
     displayName: Copy windows native assets (TorchSharp) to correct folder where the bits contributing to the packages are assembled
@@ -369,8 +378,11 @@ jobs:
     displayName: Clean up space (.git)
     continueOnError: true
 
-  - download: current
-    artifact: WindowsAssets
+  - task: DownloadPipelineArtifact@2
+    inputs:
+      artifact: WindowsAssets
+      path: $(Pipeline.Workspace)
+    timeoutInMinutes: 5
 
   - task: CopyFiles@2
     displayName: Copy windows native assets to correct folder where the bits contributing to the packages are assembled
@@ -436,8 +448,11 @@ jobs:
     displayName: Clean up space (.git)
     continueOnError: true
 
-  - download: current
-    artifact: LinuxAssets
+  - task: DownloadPipelineArtifact@2
+    inputs:
+      artifact: LinuxAssets
+      path: $(Pipeline.Workspace)
+    timeoutInMinutes: 5
 
   - task: CopyFiles@2
     displayName: Copy linux native assets to correct folder where the bits contributing to the packages are assembled
