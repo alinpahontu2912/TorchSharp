@@ -229,11 +229,8 @@ jobs:
     continueOnError: true
 
     # Download all bits contributing to the packages from the Linux build
-  - task: DownloadPipelineArtifact@2
-    timeoutInMinutes: 7
-    inputs:
-      artifact: LinuxAssets
-      path: $(Pipeline.Workspace)/LinuxAssets/TorchSharp
+  - download: current
+    artifact: LinuxAssets
 
   - task: CopyFiles@2
     displayName: Copy linux native assets (TorchSharp) to correct folder where the bits contributing to the packages are assembled
@@ -263,11 +260,8 @@ jobs:
     displayName: Free up space (LinuxAssets in workspace)
 
     # Download all bits contributing to the packages from the Mac build
-  - task: DownloadPipelineArtifact@2
-    timeoutInMinutes: 7
-    inputs:
-      artifact: MacAssets_arm64
-      path: $(Pipeline.Workspace)/MacAssets_arm64/TorchSharp
+  - download: current
+    artifact: MacAssets_arm64
 
   - task: CopyFiles@2
     displayName: Copy mac-arm64 native assets (TorchSharp) to correct folder where the bits contributing to the packages are assembled
@@ -296,12 +290,9 @@ jobs:
   - script: rmdir /s /q  $(Pipeline.Workspace)\MacAssets_arm64
     displayName: Free up space (MacAssets_arm64 in workspace)
 
-  - task: DownloadPipelineArtifact@2
-    timeoutInMinutes: 7
-    inputs:
-      artifact: WindowsAssets
-      path: $(Pipeline.Workspace)/WindowsAssets/TorchSharp
-    
+  - download: current
+    artifact: WindowsAssets
+
   - task: CopyFiles@2
     displayName: Copy windows native assets (TorchSharp) to correct folder where the bits contributing to the packages are assembled
     inputs:
@@ -378,11 +369,8 @@ jobs:
     displayName: Clean up space (.git)
     continueOnError: true
 
-  - task: DownloadPipelineArtifact@2
-    timeoutInMinutes: 7
-    inputs:
-      artifact: WindowsAssets
-      path: $(Pipeline.Workspace)/WindowsAssets
+  - download: current
+    artifact: WindowsAssets
 
   - task: CopyFiles@2
     displayName: Copy windows native assets to correct folder where the bits contributing to the packages are assembled
@@ -448,11 +436,8 @@ jobs:
     displayName: Clean up space (.git)
     continueOnError: true
 
-  - task: DownloadPipelineArtifact@2
-    timeoutInMinutes: 7
-    inputs:
-      artifact: LinuxAssets
-      path: $(Pipeline.Workspace)/LinuxAssets
+  - download: current
+    artifact: LinuxAssets
 
   - task: CopyFiles@2
     displayName: Copy linux native assets to correct folder where the bits contributing to the packages are assembled
