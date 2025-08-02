@@ -230,10 +230,10 @@ jobs:
 
     # Download all bits contributing to the packages from the Linux build
   - task: DownloadPipelineArtifact@2
+    timeoutInMinutes: 7
     inputs:
       artifact: LinuxAssets
       path: $(Pipeline.Workspace)/LinuxAssets/TorchSharp
-    timeoutInMinutes: 5
 
   - task: CopyFiles@2
     displayName: Copy linux native assets (TorchSharp) to correct folder where the bits contributing to the packages are assembled
@@ -264,10 +264,10 @@ jobs:
 
     # Download all bits contributing to the packages from the Mac build
   - task: DownloadPipelineArtifact@2
+    timeoutInMinutes: 7
     inputs:
       artifact: MacAssets_arm64
       path: $(Pipeline.Workspace)/MacAssets_arm64/TorchSharp
-    timeoutInMinutes: 5
 
   - task: CopyFiles@2
     displayName: Copy mac-arm64 native assets (TorchSharp) to correct folder where the bits contributing to the packages are assembled
@@ -297,11 +297,11 @@ jobs:
     displayName: Free up space (MacAssets_arm64 in workspace)
 
   - task: DownloadPipelineArtifact@2
+    timeoutInMinutes: 7
     inputs:
       artifact: WindowsAssets
       path: $(Pipeline.Workspace)/WindowsAssets/TorchSharp
-    timeoutInMinutes: 5
-
+    
   - task: CopyFiles@2
     displayName: Copy windows native assets (TorchSharp) to correct folder where the bits contributing to the packages are assembled
     inputs:
@@ -379,10 +379,10 @@ jobs:
     continueOnError: true
 
   - task: DownloadPipelineArtifact@2
+    timeoutInMinutes: 7
     inputs:
       artifact: WindowsAssets
       path: $(Pipeline.Workspace)/WindowsAssets
-    timeoutInMinutes: 5
 
   - task: CopyFiles@2
     displayName: Copy windows native assets to correct folder where the bits contributing to the packages are assembled
@@ -449,10 +449,10 @@ jobs:
     continueOnError: true
 
   - task: DownloadPipelineArtifact@2
+    timeoutInMinutes: 7
     inputs:
       artifact: LinuxAssets
       path: $(Pipeline.Workspace)/LinuxAssets
-    timeoutInMinutes: 5
 
   - task: CopyFiles@2
     displayName: Copy linux native assets to correct folder where the bits contributing to the packages are assembled
