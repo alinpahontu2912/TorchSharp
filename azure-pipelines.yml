@@ -41,7 +41,7 @@ resources:
 #   https://github.com/dotnet/versions/blob/main/build-info/docker/image-info.dotnet-dotnet-buildtools-prereqs-docker-main.json
 
    - container: UbuntuContainer
-     image: mcr.microsoft.com/dotnet-buildtools/prereqs:ubuntu-20.04-20240708213715-dcf0bb9
+     image: mcr.microsoft.com/dotnet-buildtools/prereqs:ubuntu-latest-20240708213715-dcf0bb9
 
 jobs:
 - template: /build/ci/job-template.yml
@@ -539,12 +539,12 @@ jobs:
   pool:
     vmImage: 'windows-latest'
   steps:
-  # Aggressive initial cleanup
+  # Aggressive cleanup
   - script: |
-      rmdir /q /s .git 2>nul
-      dotnet nuget locals all --clear
-      rmdir /s /q %USERPROFILE%\.nuget\packages 2>nul
-    displayName: Aggressive cleanup
+      rmdir /q /s bin\obj 2>nul
+      del /s /q *.pdb 2>nul
+      del /s /q *.xml 2>nul
+    displayName: Final cleanup
     continueOnError: true
 
   # Download Windows CUDA assets in smaller chunks
@@ -622,7 +622,7 @@ jobs:
     DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
     DOTNET_MULTILEVEL_LOOKUP: 0
   pool:
-    vmImage: 'ubuntu-20.04'
+    vmImage: 'ubuntu-latest'
   container: UbuntuContainer
   steps:
   - task: UseDotNet@2
@@ -635,13 +635,12 @@ jobs:
   - script: ${{ variables.LinuxPrepScript }}
     displayName: Install dependencies
 
-  # Aggressive initial cleanup
+  # Aggressive cleanup
   - script: |
-      rm -rf .git
-      dotnet nuget locals all --clear
-      rm -rf ~/.nuget/packages
-      df -h
-    displayName: Aggressive cleanup
+      rmdir /q /s bin\obj 2>nul
+      del /s /q *.pdb 2>nul
+      del /s /q *.xml 2>nul
+    displayName: Final cleanup
     continueOnError: true
 
   # Download Linux CUDA assets in smaller chunks
