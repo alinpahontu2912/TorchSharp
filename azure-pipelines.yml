@@ -235,6 +235,7 @@ jobs:
     DOTNET_CLI_TELEMETRY_OPTOUT: 1
     DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
     DOTNET_MULTILEVEL_LOOKUP: 0
+    CMAKE_POLICY_VERSION_MINIMUM: 3.5
   pool:
     vmImage: 'macos-latest'
   steps:
@@ -242,25 +243,29 @@ jobs:
   - script: |
       rm -rf .git
       dotnet nuget locals all --clear
+      # Check CMake version and update if needed
+      cmake --version || brew install cmake
+      brew upgrade cmake || true
+      cmake --version
       df -h
-    displayName: Initial cleanup
+    displayName: Initial cleanup and setup
     continueOnError: true
 
   # Build and clean archives immediately
   - script: |
-      dotnet build -c $(BuildConfig) src/Redist/libtorch-cpu/libtorch-cpu.proj /p:UpdateSHA=true /p:TargetOS=mac /p:TargetArchitecture=arm64 /t:Build /p:IncludeLibTorchCpuPackages=true
+      dotnet build -c $(BuildConfig) src/Redist/libtorch-cpu/libtorch-cpu.proj /p:UpdateSHA=true /p:TargetOS=mac /p:TargetArchitecture=arm64 /t:Build /p:IncludeLibTorchCpuPackages=true /p:CmakePolicyVersionMinimum=3.5
       find . -name "*.zip" -type f -delete
       find . -name "*.tar.gz" -type f -delete
     displayName: Download libtorch native binaries and cleanup
     condition: eq('${{ parameters.BuildLibTorchPackages }}', true)
 
-  - script: dotnet build -c $(BuildConfig) src/TorchSharp/TorchSharp.csproj /p:SkipCuda=true /p:SkipTests=true /p:TargetArchitecture=arm64
+  - script: dotnet build -c $(BuildConfig) src/TorchSharp/TorchSharp.csproj /p:SkipCuda=true /p:SkipTests=true /p:TargetArchitecture=arm64 /p:CmakePolicyVersionMinimum=3.5
     displayName: Build TorchSharp mac-arm64
 
-  - script: dotnet build -c $(BuildConfig) src/TorchVision/TorchVision.csproj /p:SkipCuda=true /p:SkipTests=true /p:TargetArchitecture=arm64
+  - script: dotnet build -c $(BuildConfig) src/TorchVision/TorchVision.csproj /p:SkipCuda=true /p:SkipTests=true /p:TargetArchitecture=arm64 /p:CmakePolicyVersionMinimum=3.5
     displayName: Build TorchVision
 
-  - script: dotnet build -c $(BuildConfig) src/TorchAudio/TorchAudio.csproj /p:SkipCuda=true /p:SkipTests=true /p:TargetArchitecture=arm64
+  - script: dotnet build -c $(BuildConfig) src/TorchAudio/TorchAudio.csproj /p:SkipCuda=true /p:SkipTests=true /p:TargetArchitecture=arm64 /p:CmakePolicyVersionMinimum=3.5
     displayName: Build TorchAudio
 
   # Clean up before publishing
@@ -520,7 +525,7 @@ jobs:
 # Only run if BuildLibTorchPackages is true
 - job: Build_libtorch_cuda_win_Packages
 ################################################################################
-  condition: and(succeeded(), ne(variables['system.pullrequest.isfork'], true), eq(variables['build.sourcebranchname'], '${{ parameters.SourceBranchName }}'), eq('${{ parameters.BuildLibTorchPackages }}', true))
+  condition: and(not(canceled()), ne(variables['system.pullrequest.isfork'], true), eq(variables['build.sourcebranchname'], '${{ parameters.SourceBranchName }}'), eq('${{ parameters.BuildLibTorchPackages }}', true))
   dependsOn:
   - Windows_Native_Build_For_Packages
   - Build_TorchSharp_And_libtorch_cpu_Packages
@@ -605,7 +610,7 @@ jobs:
 ################################################################################
 - job: Build_libtorch_cuda_linux_Packages
 ################################################################################
-  condition: and(succeeded(), ne(variables['system.pullrequest.isfork'], true), eq(variables['build.sourcebranchname'], '${{ parameters.SourceBranchName }}'), eq('${{ parameters.BuildLibTorchPackages }}', true))
+  condition: and(not(canceled()), ne(variables['system.pullrequest.isfork'], true), eq(variables['build.sourcebranchname'], '${{ parameters.SourceBranchName }}'), eq('${{ parameters.BuildLibTorchPackages }}', true))
   dependsOn:
   - Linux_Native_Build_For_Packages
   - Build_libtorch_cuda_win_Packages
