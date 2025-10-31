@@ -102,8 +102,15 @@ jobs:
   pool:
     vmImage: 'ubuntu-latest'
   container: UbuntuContainer
-  # Exact copy of the dependency install above - TODO share this somewhere
   steps:
+  # Initial cleanup
+  - script: |
+      rm -rf .git
+      dotnet nuget locals all --clear
+      df -h
+    displayName: Initial cleanup and check disk space
+    continueOnError: true
+
   - task: UseDotNet@2
     displayName: 'Use .NET Core sdk'
     inputs:
@@ -114,16 +121,26 @@ jobs:
   - script: ${{ variables.LinuxPrepScript }}
     displayName: Install dependencies
 
-  - script: dotnet build -c $(BuildConfig) src/Redist/libtorch-cpu/libtorch-cpu.proj /p:UpdateSHA=true /p:SkipTests=true /p:TargetOS=linux /t:Build /p:IncludeLibTorchCpuPackages=true
+  # Build libtorch CPU and clean immediately
+  - script: |
+      dotnet build -c $(BuildConfig) src/Redist/libtorch-cpu/libtorch-cpu.proj /p:UpdateSHA=true /p:SkipTests=true /p:TargetOS=linux /t:Build /p:IncludeLibTorchCpuPackages=true
+      # Clean up downloaded archives after extraction
+      find . -name "*.zip" -type f -delete
+      find . -name "*.tar.gz" -type f -delete
     condition: eq('${{ parameters.BuildLibTorchPackages }}', true)
-    displayName: Download libtorch native binaries
+    displayName: Download libtorch native binaries and cleanup archives
 
-  - script: dotnet build -c $(BuildConfig) src/Redist/libtorch-cuda-12.8/libtorch-cuda-12.8.proj /p:UpdateSHA=true /p:SkipTests=true /p:TargetOS=linux /t:Build /p:IncludeLibTorchCudaPackages=true
+  # Build libtorch CUDA and clean immediately
+  - script: |
+      dotnet build -c $(BuildConfig) src/Redist/libtorch-cuda-12.8/libtorch-cuda-12.8.proj /p:UpdateSHA=true /p:SkipTests=true /p:TargetOS=linux /t:Build /p:IncludeLibTorchCudaPackages=true
+      # Clean up downloaded archives after extraction
+      find . -name "*.zip" -type f -delete
+      find . -name "*.tar.gz" -type f -delete
     condition: eq('${{ parameters.BuildLibTorchPackages }}', true)
-    displayName: Download libtorch native CUDA binaries
+    displayName: Download libtorch CUDA binaries and cleanup archives
 
   - script: dotnet build -c $(BuildConfig) src/TorchSharp/TorchSharp.csproj /p:SkipCuda=true /p:SkipTests=true
-    displayName: Build linux
+    displayName: Build TorchSharp
 
   - script: dotnet build -c $(BuildConfig) src/TorchVision/TorchVision.csproj /p:SkipCuda=true /p:SkipTests=true
     displayName: Build TorchVision
@@ -131,8 +148,19 @@ jobs:
   - script: dotnet build -c $(BuildConfig) src/TorchAudio/TorchAudio.csproj /p:SkipCuda=true /p:SkipTests=true
     displayName: Build TorchAudio
 
+  # Clean up unnecessary files before publishing
+  - script: |
+      find $(Build.SourcesDirectory)/bin -name "*.pdb" -type f -delete
+      find $(Build.SourcesDirectory)/bin -name "*.xml" -type f -delete
+      rm -rf $(Build.SourcesDirectory)/bin/obj/packprep/$(BuildConfig)/**/*.a
+      df -h
+    displayName: Clean up unnecessary files before publish
+    continueOnError: true
+
   - publish: $(Build.SourcesDirectory)/bin/obj/packprep/$(BuildConfig)
     artifact: LinuxAssets
+    parallel: true
+    parallelCount: 8
 
 ################################################################################
 - job: Windows_Native_Build_For_Packages
@@ -146,8 +174,15 @@ jobs:
     DOTNET_MULTILEVEL_LOOKUP: 0
   pool:
     vmImage: 'windows-latest'
-
   steps:
+  # Initial cleanup
+  - script: |
+      rmdir /s /q .git 2>nul
+      dotnet nuget locals all --clear
+      dir
+    displayName: Initial cleanup
+    continueOnError: true
+
   - task: UseDotNet@2
     displayName: 'Use .NET Core sdk'
     inputs:
@@ -155,16 +190,25 @@ jobs:
       version: 6.0.402
       installationPath: $(Agent.ToolsDirectory)/dotnet
 
-  - script: dotnet build -c $(BuildConfig) src/Redist/libtorch-cpu/libtorch-cpu.proj /p:UpdateSHA=true /p:SkipTests=true /p:TargetOS=windows /t:Build /p:IncludeLibTorchCpuPackages=true
-    displayName: Download libtorch native binaries
-
-  - script: dotnet build -c $(BuildConfig) src/Redist/libtorch-cuda-12.8/libtorch-cuda-12.8.proj /p:UpdateSHA=true /p:SkipTests=true /p:TargetOS=windows /t:Build /p:IncludeLibTorchCudaPackages=true
+  # Build libtorch CPU and clean immediately
+  - script: |
+      dotnet build -c $(BuildConfig) src/Redist/libtorch-cpu/libtorch-cpu.proj /p:UpdateSHA=true /p:SkipTests=true /p:TargetOS=windows /t:Build /p:IncludeLibTorchCpuPackages=true
+      del /s /q *.zip 2>nul
+      del /s /q *.tar.gz 2>nul
+    displayName: Download libtorch native binaries and cleanup
     condition: eq('${{ parameters.BuildLibTorchPackages }}', true)
-    displayName: Download libtorch native CUDA binaries
+
+  # Build libtorch CUDA and clean immediately  
+  - script: |
+      dotnet build -c $(BuildConfig) src/Redist/libtorch-cuda-12.8/libtorch-cuda-12.8.proj /p:UpdateSHA=true /p:SkipTests=true /p:TargetOS=windows /t:Build /p:IncludeLibTorchCudaPackages=true
+      del /s /q *.zip 2>nul
+      del /s /q *.tar.gz 2>nul
+    condition: eq('${{ parameters.BuildLibTorchPackages }}', true)
+    displayName: Download libtorch CUDA binaries and cleanup
 
   - script: dotnet build -c $(BuildConfig) src/TorchSharp/TorchSharp.csproj /p:SkipCuda=true /p:SkipTests=true
     condition: eq('${{ parameters.BuildLibTorchPackages }}', true)
-    displayName: Build Windows
+    displayName: Build TorchSharp
 
   - script: dotnet build -c $(BuildConfig) src/TorchVision/TorchVision.csproj /p:SkipCuda=true /p:SkipTests=true
     displayName: Build TorchVision
@@ -172,12 +216,22 @@ jobs:
   - script: dotnet build -c $(BuildConfig) src/TorchAudio/TorchAudio.csproj /p:SkipCuda=true /p:SkipTests=true
     displayName: Build TorchAudio
 
+  # Clean up unnecessary files before publishing
+  - script: |
+      del /s /q $(Build.SourcesDirectory)\bin\*.pdb 2>nul
+      del /s /q $(Build.SourcesDirectory)\bin\*.xml 2>nul
+      del /s /q $(Build.SourcesDirectory)\bin\obj\packprep\$(BuildConfig)\*.lib 2>nul
+    displayName: Clean up unnecessary files
+    continueOnError: true
+
   - publish: $(Build.SourcesDirectory)/bin/obj/packprep/$(BuildConfig)
     artifact: WindowsAssets
+    parallel: true
+    parallelCount: 8
 
-  # ################################################################################
+################################################################################
 - job: MacOS_arm64_Native_Build_For_Packages
-  # ################################################################################
+################################################################################
   condition: and(ne(variables['system.pullrequest.isfork'], true), eq(variables['build.sourcebranchname'], '${{ parameters.SourceBranchName }}'))
   variables:
     BuildConfig: Release
@@ -188,21 +242,43 @@ jobs:
   pool:
     vmImage: 'macos-latest'
   steps:
-    - script: dotnet build -c $(BuildConfig) src/Redist/libtorch-cpu/libtorch-cpu.proj /p:UpdateSHA=true /p:TargetOS=mac /p:TargetArchitecture=arm64 /t:Build /p:IncludeLibTorchCpuPackages=true
-      displayName: Download libtorch native binaries
+  # Initial cleanup
+  - script: |
+      rm -rf .git
+      dotnet nuget locals all --clear
+      df -h
+    displayName: Initial cleanup
+    continueOnError: true
 
-    - script: dotnet build -c $(BuildConfig) src/TorchSharp/TorchSharp.csproj /p:SkipCuda=true /p:SkipTests=true /p:TargetArchitecture=arm64
-      displayName: Build mac-arm64
+  # Build and clean archives immediately
+  - script: |
+      dotnet build -c $(BuildConfig) src/Redist/libtorch-cpu/libtorch-cpu.proj /p:UpdateSHA=true /p:TargetOS=mac /p:TargetArchitecture=arm64 /t:Build /p:IncludeLibTorchCpuPackages=true
+      find . -name "*.zip" -type f -delete
+      find . -name "*.tar.gz" -type f -delete
+    displayName: Download libtorch native binaries and cleanup
+    condition: eq('${{ parameters.BuildLibTorchPackages }}', true)
 
-    - script: dotnet build -c $(BuildConfig) src/TorchVision/TorchVision.csproj /p:SkipCuda=true /p:SkipTests=true /p:TargetArchitecture=arm64
-      displayName: Build TorchVision
+  - script: dotnet build -c $(BuildConfig) src/TorchSharp/TorchSharp.csproj /p:SkipCuda=true /p:SkipTests=true /p:TargetArchitecture=arm64
+    displayName: Build TorchSharp mac-arm64
 
-    - script: dotnet build -c $(BuildConfig) src/TorchAudio/TorchAudio.csproj /p:SkipCuda=true /p:SkipTests=true /p:TargetArchitecture=arm64
-      displayName: Build TorchAudio
+  - script: dotnet build -c $(BuildConfig) src/TorchVision/TorchVision.csproj /p:SkipCuda=true /p:SkipTests=true /p:TargetArchitecture=arm64
+    displayName: Build TorchVision
 
-    - publish: $(Build.SourcesDirectory)/bin/obj/packprep/$(BuildConfig)
-      artifact: MacAssets_arm64
+  - script: dotnet build -c $(BuildConfig) src/TorchAudio/TorchAudio.csproj /p:SkipCuda=true /p:SkipTests=true /p:TargetArchitecture=arm64
+    displayName: Build TorchAudio
 
+  # Clean up before publishing
+  - script: |
+      find $(Build.SourcesDirectory)/bin -name "*.pdb" -type f -delete
+      find $(Build.SourcesDirectory)/bin -name "*.xml" -type f -delete
+      df -h
+    displayName: Clean up unnecessary files
+    continueOnError: true
+
+  - publish: $(Build.SourcesDirectory)/bin/obj/packprep/$(BuildConfig)
+    artifact: MacAssets_arm64
+    parallel: true
+    parallelCount: 8
 
 ################################################################################
 - job: Build_TorchSharp_And_libtorch_cpu_Packages
@@ -255,80 +331,63 @@ jobs:
     inputs:
       sourceFolder: $(Pipeline.Workspace)/LinuxAssets
       targetFolder: $(Build.SourcesDirectory)/bin/obj/packprep/$(BuildConfig)
+      cleanTargetFolder: false
 
-  - script: rmdir /s /q  $(Pipeline.Workspace)\LinuxAssets
-    displayName: Free up space (LinuxAssets in workspace)
+  - script: rmdir /s /q $(Pipeline.Workspace)\LinuxAssets
+    displayName: Clean LinuxAssets immediately
+    continueOnError: true
 
-    # Download all bits contributing to the packages from the Mac build
+  # Process Mac assets  
   - download: current
     artifact: MacAssets_arm64
+    patterns: |
+      TorchSharp/**
+      TorchAudio/**
+      TorchVision/**
 
   - task: CopyFiles@2
-    displayName: Copy mac-arm64 native assets (TorchSharp) to correct folder where the bits contributing to the packages are assembled
-    inputs:
-      sourceFolder: $(Pipeline.Workspace)/MacAssets_arm64/TorchSharp
-      targetFolder: $(Build.SourcesDirectory)/bin/obj/packprep/$(BuildConfig)/TorchSharp
-
-  - task: CopyFiles@2
-    displayName: Copy mac-arm64 native assets (TorchAudio) to correct folder where the bits contributing to the packages are assembled
-    inputs:
-      sourceFolder: $(Pipeline.Workspace)/MacAssets_arm64/TorchAudio
-      targetFolder: $(Build.SourcesDirectory)/bin/obj/packprep/$(BuildConfig)/TorchAudio
-
-  - task: CopyFiles@2
-    displayName: Copy mac-arm64 native assets (TorchVision) to correct folder where the bits contributing to the packages are assembled
-    inputs:
-      sourceFolder: $(Pipeline.Workspace)/MacAssets_arm64/TorchVision
-      targetFolder: $(Build.SourcesDirectory)/bin/obj/packprep/$(BuildConfig)/TorchVision
-
-  - task: CopyFiles@2
-    displayName: Copy mac-arm64 native assets (libtorch-cpu) to correct folder where the bits contributing to the packages are assembled
+    displayName: Copy mac-arm64 native assets (batch)
     inputs:
       sourceFolder: $(Pipeline.Workspace)/MacAssets_arm64
       targetFolder: $(Build.SourcesDirectory)/bin/obj/packprep/$(BuildConfig)
+      cleanTargetFolder: false
 
-  - script: rmdir /s /q  $(Pipeline.Workspace)\MacAssets_arm64
-    displayName: Free up space (MacAssets_arm64 in workspace)
+  - script: rmdir /s /q $(Pipeline.Workspace)\MacAssets_arm64
+    displayName: Clean MacAssets immediately
+    continueOnError: true
 
+  # Process Windows assets
   - download: current
     artifact: WindowsAssets
+    patterns: |
+      TorchSharp/**
+      TorchAudio/**
+      TorchVision**
+      libtorch-cpu-win-x64/**
 
   - task: CopyFiles@2
-    displayName: Copy windows native assets (TorchSharp) to correct folder where the bits contributing to the packages are assembled
+    displayName: Copy windows native assets (batch)
     inputs:
-      sourceFolder: $(Pipeline.Workspace)/WindowsAssets/TorchSharp
-      targetFolder: $(Build.SourcesDirectory)/bin/obj/packprep/$(BuildConfig)/TorchSharp
+      sourceFolder: $(Pipeline.Workspace)/WindowsAssets
+      targetFolder: $(Build.SourcesDirectory)/bin/obj/packprep/$(BuildConfig)
+      cleanTargetFolder: false
 
-  - task: CopyFiles@2
-    displayName: Copy windows native assets (TorchAudio) to correct folder where the bits contributing to the packages are assembled
-    inputs:
-      sourceFolder: $(Pipeline.Workspace)/WindowsAssets/TorchAudio
-      targetFolder: $(Build.SourcesDirectory)/bin/obj/packprep/$(BuildConfig)/TorchAudio
+  - script: rmdir /s /q $(Pipeline.Workspace)\WindowsAssets
+    displayName: Clean WindowsAssets immediately
+    continueOnError: true
 
-  - task: CopyFiles@2
-    displayName: Copy windows native assets (TorchVision) to correct folder where the bits contributing to the packages are assembled
-    inputs:
-      sourceFolder: $(Pipeline.Workspace)/WindowsAssets/TorchVision
-      targetFolder: $(Build.SourcesDirectory)/bin/obj/packprep/$(BuildConfig)/TorchVision
-
-  - task: CopyFiles@2
-    displayName: Copy windows native assets (libtorch-cpu) to correct folder where the bits contributing to the packages are assembled
-    inputs:
-      sourceFolder: $(Pipeline.Workspace)/WindowsAssets/libtorch-cpu-win-x64
-      targetFolder: $(Build.SourcesDirectory)/bin/obj/packprep/$(BuildConfig)/libtorch-cpu-win-x64
-
-  - script: rmdir /s /q  $(Pipeline.Workspace)\WindowsAssets
-    displayName: Free up space (windows assets in workspace)
-
-  - script: dotnet restore pkg/pack.proj /p:Configuration=Release
+  # Restore and pack
+  - script: dotnet restore pkg/pack.proj /p:Configuration=Release --nologo
     displayName: Restore package projects
 
-  # Pack TorchSharp (and libtorch-cpu if BuildLibTorchPackages is true)
   - script: dotnet pack -c $(BuildConfig) --no-build -v:n /p:SkipNative=true /p:SkipTests=true /p:IncludeTorchSharpPackage=true /p:IncludeLibTorchCpuPackages=${{ parameters.BuildLibTorchPackages }} /p:GenerateCompatibilitySuppressionFile=true pkg/pack.proj
     displayName: Create Packages
 
-  - script: rmdir /q /s bin\obj
-    displayName: Clean up space (bin\obj)
+  # Final cleanup before staging
+  - script: |
+      rmdir /q /s bin\obj
+      for /d %%i in ($(Build.SourcesDirectory)\bin\packages\$(BuildConfig)\*.symbols.nupkg) do del "%%i"
+    displayName: Clean up before staging
     continueOnError: true
 
   - task: CopyFiles@2
@@ -336,6 +395,9 @@ jobs:
     inputs:
       sourceFolder: $(Build.SourcesDirectory)/bin/packages/$(BuildConfig)
       targetFolder: $(Build.ArtifactStagingDirectory)
+      contents: |
+        **/*.nupkg
+        !**/*.symbols.nupkg
 
   - publish: $(Build.ArtifactStagingDirectory)
     displayName: Publish build packages
@@ -362,44 +424,56 @@ jobs:
   pool:
     vmImage: 'windows-latest'
   steps:
-
-  # We are 10GB space-constrained on the Azure Pipelines CI system so clean up what we can
-  # yup we even nuke the .git
-  - script: rmdir /q /s .git
-    displayName: Clean up space (.git)
+  # Aggressive initial cleanup
+  - script: |
+      rmdir /q /s .git 2>nul
+      dotnet nuget locals all --clear
+      rmdir /s /q %USERPROFILE%\.nuget\packages 2>nul
+    displayName: Aggressive cleanup
     continueOnError: true
 
+  # Download only CUDA-related assets
   - download: current
     artifact: WindowsAssets
+    patterns: |
+      libtorch-cuda*/**
 
   - task: CopyFiles@2
-    displayName: Copy windows native assets to correct folder where the bits contributing to the packages are assembled
+    displayName: Copy windows CUDA assets
     inputs:
       sourceFolder: $(Pipeline.Workspace)/WindowsAssets
       targetFolder: $(Build.SourcesDirectory)/bin/obj/packprep/$(BuildConfig)
+      contents: |
+        libtorch-cuda*/**
 
-  - script: rmdir /s /q  $(Pipeline.Workspace)\WindowsAssets
-    displayName: Free up space (windows assets in workspace)
+  - script: rmdir /s /q $(Pipeline.Workspace)\WindowsAssets
+    displayName: Clean workspace immediately
 
-  - script: dotnet restore pkg/pack.proj /p:Configuration=Release
+  - script: dotnet restore pkg/pack.proj /p:Configuration=Release --nologo
     displayName: Restore package projects
 
   - script: dotnet pack -c $(BuildConfig) --no-build -v:n /p:SkipNative=true /p:SkipTests=true /p:IncludeTorchSharpPackage=false /p:IncludeLibTorchCpuPackages=false /p:IncludeLibTorchCudaPackages=true /p:TargetOS=windows pkg/pack.proj
-    displayName: Create Packages
+    displayName: Create CUDA Packages
 
-  # We are 10GB space-constrained on the Azure Pipelines CI system so clean up what we can
-  - script: rmdir /q /s bin\obj
-    displayName: Clean up space (bin\obj)
+  # Aggressive cleanup before staging
+  - script: |
+      rmdir /q /s bin\obj
+      del /s /q *.pdb 2>nul
+      del /s /q *.xml 2>nul
+    displayName: Final cleanup
     continueOnError: true
 
   - task: CopyFiles@2
-    displayName: Copy packaged assets to staging folder
+    displayName: Copy packaged assets to staging
     inputs:
       sourceFolder: $(Build.SourcesDirectory)/bin/packages/$(BuildConfig)
       targetFolder: $(Build.ArtifactStagingDirectory)
+      contents: |
+        *cuda*.nupkg
+        !*.symbols.nupkg
 
   - publish: $(Build.ArtifactStagingDirectory)
-    displayName: Publish Windows CUDA build packages
+    displayName: Publish Windows CUDA packages
     artifact: BuildWinCUDAPackages
 
 ################################################################################
@@ -418,7 +492,6 @@ jobs:
   pool:
     vmImage: 'ubuntu-latest'
   container: UbuntuContainer
-  # Exact copy of the dependency install above - TODO share this somewhere
   steps:
   - task: UseDotNet@2
     displayName: 'Use .NET Core sdk'
@@ -430,43 +503,58 @@ jobs:
   - script: ${{ variables.LinuxPrepScript }}
     displayName: Install dependencies
 
-  # We are 10GB space-constrained on the Azure Pipelines CI system so clean up what we can
-  # yup we even nuke the .git
-  - script: rm -fr .git
-    displayName: Clean up space (.git)
+  # Aggressive initial cleanup
+  - script: |
+      rm -rf .git
+      dotnet nuget locals all --clear
+      rm -rf ~/.nuget/packages
+      df -h
+    displayName: Aggressive cleanup
     continueOnError: true
 
+  # Download only CUDA-related assets
   - download: current
     artifact: LinuxAssets
+    patterns: |
+      libtorch-cuda*/**
 
   - task: CopyFiles@2
-    displayName: Copy linux native assets to correct folder where the bits contributing to the packages are assembled
+    displayName: Copy linux CUDA assets
     inputs:
       sourceFolder: $(Pipeline.Workspace)/LinuxAssets
       targetFolder: $(Build.SourcesDirectory)/bin/obj/packprep/$(BuildConfig)
+      contents: |
+        libtorch-cuda*/**
 
-  - script: rm -fr  $(Pipeline.Workspace)/LinuxAssets
-    displayName: Free up space (linux assets in workspace)
+  - script: rm -rf $(Pipeline.Workspace)/LinuxAssets
+    displayName: Clean workspace immediately
 
-  - script: dotnet restore pkg/pack.proj /p:Configuration=Release
+  - script: dotnet restore pkg/pack.proj /p:Configuration=Release --nologo
     displayName: Restore package projects
 
   - script: dotnet pack -c $(BuildConfig) --no-build -v:n /p:SkipNative=true /p:SkipTests=true /p:ApiCompatGenerateSuppressionFile=true /p:IncludeTorchSharpPackage=false /p:IncludeLibTorchCpuPackages=false /p:IncludeLibTorchCudaPackages=true /p:TargetOS=linux pkg/pack.proj
-    displayName: Create Packages
+    displayName: Create CUDA Packages
 
-  # We are 10GB space-constrained on the Azure Pipelines CI system so clean up what we can
-  - script: rm -fr bin/obj
-    displayName: Clean up space (bin/obj)
+  # Final cleanup
+  - script: |
+      rm -rf bin/obj
+      find . -name "*.pdb" -type f -delete
+      find . -name "*.xml" -type f -delete
+      df -h
+    displayName: Final cleanup
     continueOnError: true
 
   - task: CopyFiles@2
-    displayName: Copy packaged assets to staging folder
+    displayName: Copy packaged assets to staging
     inputs:
       sourceFolder: $(Build.SourcesDirectory)/bin/packages/$(BuildConfig)
       targetFolder: $(Build.ArtifactStagingDirectory)
+      contents: |
+        *cuda*.nupkg
+        !*.symbols.nupkg
 
   - publish: $(Build.ArtifactStagingDirectory)
-    displayName: Publish Linux CUDA build packages
+    displayName: Publish Linux CUDA packages
     artifact: BuildLinuxCUDAPackages
 
 ################################################################################
@@ -501,16 +589,16 @@ jobs:
     inputs:
       targetType: 'inline'
       script: |
-        & .\sign code azure-key-vault '**/*.nupkg' `
-          --base-directory "$(Pipeline.Workspace)\BuildTorchSharpPackages" `
-          --file-list "$(Pipeline.Workspace)\config\signedfiles.txt" `
-          --azure-key-vault-url "$(SignVaultURL)" `
-          --publisher-name "TorchSharp" `
-          --description "TorchSharp" `
-          --description-url "https://github.com/dotnet/TorchSharp" `
-          --azure-key-vault-tenant-id "$(SignTenantId)" `
-          --azure-key-vault-client-id "$(SignClientId)" `
-          --azure-key-vault-client-secret "$(SignClientSecret)" `
+        & .\sign code azure-key-vault '**/*.nupkg' ``
+          --base-directory "$(Pipeline.Workspace)\BuildTorchSharpPackages" ``
+          --file-list "$(Pipeline.Workspace)\config\signedfiles.txt" ``
+          --azure-key-vault-url "$(SignVaultURL)" ``
+          --publisher-name "TorchSharp" ``
+          --description "TorchSharp" ``
+          --description-url "https://github.com/dotnet/TorchSharp" ``
+          --azure-key-vault-tenant-id "$(SignTenantId)" ``
+          --azure-key-vault-client-id "$(SignClientId)" ``
+          --azure-key-vault-client-secret "$(SignClientSecret)" ``
           --azure-key-vault-certificate "$(SignCertFriendlyName)"
 
   - publish: $(Pipeline.Workspace)/BuildTorchSharpPackages
@@ -554,16 +642,16 @@ jobs:
     inputs:
       targetType: 'inline'
       script: |
-        & .\sign code azure-key-vault '**/*.nupkg' `
-          --base-directory "$(Pipeline.Workspace)\BuildWinCUDAPackages" `
-          --file-list "$(Pipeline.Workspace)\config\signedfiles.txt" `
-          --azure-key-vault-url "$(SignVaultURL)" `
-          --publisher-name "TorchSharp" `
-          --description "TorchSharp" `
-          --description-url "https://github.com/dotnet/TorchSharp" `
-          --azure-key-vault-tenant-id "$(SignTenantId)"  `
-          --azure-key-vault-client-id "$(SignClientId)" `
-          --azure-key-vault-client-secret "$(SignClientSecret)" `
+        & .\sign code azure-key-vault '**/*.nupkg' ``
+          --base-directory "$(Pipeline.Workspace)\BuildWinCUDAPackages" ``
+          --file-list "$(Pipeline.Workspace)\config\signedfiles.txt" ``
+          --azure-key-vault-url "$(SignVaultURL)" ``
+          --publisher-name "TorchSharp" ``
+          --description "TorchSharp" ``
+          --description-url "https://github.com/dotnet/TorchSharp" ``
+          --azure-key-vault-tenant-id "$(SignTenantId)"  ``
+          --azure-key-vault-client-id "$(SignClientId)" ``
+          --azure-key-vault-client-secret "$(SignClientSecret)" ``
           --azure-key-vault-certificate "$(SignCertFriendlyName)"
 
   - publish: $(Pipeline.Workspace)/BuildWinCUDAPackages
@@ -583,16 +671,16 @@ jobs:
     inputs:
       targetType: 'inline'
       script: |
-        & .\sign code azure-key-vault '**/*.nupkg' `
-          --base-directory "$(Pipeline.Workspace)\BuildLinuxCUDAPackages" `
-          --file-list "$(Pipeline.Workspace)\config\signedfiles.txt" `
-          --azure-key-vault-url "$(SignVaultURL)" `
-          --publisher-name "TorchSharp" `
-          --description "TorchSharp" `
-          --description-url "https://github.com/dotnet/TorchSharp" `
-          --azure-key-vault-tenant-id "$(SignTenantId)" `
-          --azure-key-vault-client-id "$(SignClientId)" `
-          --azure-key-vault-client-secret "$(SignClientSecret)" `
+        & .\sign code azure-key-vault '**/*.nupkg' ``
+          --base-directory "$(Pipeline.Workspace)\BuildLinuxCUDAPackages" ``
+          --file-list "$(Pipeline.Workspace)\config\signedfiles.txt" ``
+          --azure-key-vault-url "$(SignVaultURL)" ``
+          --publisher-name "TorchSharp" ``
+          --description "TorchSharp" ``
+          --description-url "https://github.com/dotnet/TorchSharp" ``
+          --azure-key-vault-tenant-id "$(SignTenantId)" ``
+          --azure-key-vault-client-id "$(SignClientId)" ``
+          --azure-key-vault-client-secret "$(SignClientSecret)" ``
           --azure-key-vault-certificate "$(SignCertFriendlyName)"
 
   - publish: $(Pipeline.Workspace)/BuildLinuxCUDAPackages
