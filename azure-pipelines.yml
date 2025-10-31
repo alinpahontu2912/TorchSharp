@@ -159,8 +159,6 @@ jobs:
 
   - publish: $(Build.SourcesDirectory)/bin/obj/packprep/$(BuildConfig)
     artifact: LinuxAssets
-    parallel: true
-    parallelCount: 8
 
 ################################################################################
 - job: Windows_Native_Build_For_Packages
@@ -226,8 +224,6 @@ jobs:
 
   - publish: $(Build.SourcesDirectory)/bin/obj/packprep/$(BuildConfig)
     artifact: WindowsAssets
-    parallel: true
-    parallelCount: 8
 
 ################################################################################
 - job: MacOS_arm64_Native_Build_For_Packages
@@ -277,8 +273,6 @@ jobs:
 
   - publish: $(Build.SourcesDirectory)/bin/obj/packprep/$(BuildConfig)
     artifact: MacAssets_arm64
-    parallel: true
-    parallelCount: 8
 
 ################################################################################
 - job: Build_TorchSharp_And_libtorch_cpu_Packages
