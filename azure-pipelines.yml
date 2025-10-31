@@ -327,8 +327,10 @@ jobs:
       path: $(Pipeline.Workspace)/LinuxAssets
     retryCountOnTaskFailure: 3
 
+  # Download libtorch assets if they exist
   - task: DownloadPipelineArtifact@2
     displayName: Download Linux libtorch-cpu assets
+    condition: eq('${{ parameters.BuildLibTorchPackages }}', true)
     inputs:
       artifact: LinuxAssets
       patterns: |
@@ -337,18 +339,14 @@ jobs:
     retryCountOnTaskFailure: 3
     continueOnError: true
 
-  # Download remaining Linux assets if any
+  # Download CUDA assets if they exist (shouldn't be in this artifact but just in case)
   - task: DownloadPipelineArtifact@2
-    displayName: Download remaining Linux assets
-    condition: always()
+    displayName: Download any Linux CUDA assets (if present)
+    condition: eq('${{ parameters.BuildLibTorchPackages }}', true)
     inputs:
       artifact: LinuxAssets
       patterns: |
-        **
-        !TorchSharp/**
-        !TorchAudio/**
-        !TorchVision/**
-        !libtorch-cpu-linux-x64/**
+        libtorch-cuda-*-linux-x64/**
       path: $(Pipeline.Workspace)/LinuxAssets
     retryCountOnTaskFailure: 2
     continueOnError: true
@@ -414,6 +412,18 @@ jobs:
       path: $(Pipeline.Workspace)/MacAssets_arm64
     retryCountOnTaskFailure: 3
 
+  # Download Mac libtorch assets if they exist
+  - task: DownloadPipelineArtifact@2
+    displayName: Download Mac libtorch-cpu assets (if present)
+    condition: eq('${{ parameters.BuildLibTorchPackages }}', true)
+    inputs:
+      artifact: MacAssets_arm64
+      patterns: |
+        libtorch-cpu-osx-arm64/**
+      path: $(Pipeline.Workspace)/MacAssets_arm64
+    retryCountOnTaskFailure: 2
+    continueOnError: true
+
   - task: CopyFiles@2
     displayName: Copy mac-arm64 native assets (batch)
     inputs:
@@ -455,12 +465,14 @@ jobs:
 
   - task: DownloadPipelineArtifact@2
     displayName: Download Windows libtorch-cpu assets
+    condition: eq('${{ parameters.BuildLibTorchPackages }}', true)
     inputs:
       artifact: WindowsAssets
       patterns: |
         libtorch-cpu-win-x64/**
       path: $(Pipeline.Workspace)/WindowsAssets
     retryCountOnTaskFailure: 3
+    continueOnError: true
 
   - task: CopyFiles@2
     displayName: Copy windows native assets (batch)
