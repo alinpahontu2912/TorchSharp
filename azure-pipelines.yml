@@ -638,9 +638,9 @@ jobs:
 
   # Aggressive cleanup
   - script: |
-      rmdir /q /s bin\obj 2>nul
-      del /s /q *.pdb 2>nul
-      del /s /q *.xml 2>nul
+      rm -rf .git
+      dotnet nuget locals all --clear
+      df -h
     displayName: Final cleanup
     continueOnError: true
 
