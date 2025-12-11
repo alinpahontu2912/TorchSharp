@@ -799,6 +799,9 @@ jobs:
           --publisher-name "TorchSharp" `
           --description "TorchSharp" `
           --description-url "https://github.com/dotnet/TorchSharp" `
+          --azure-key-vault-tenant-id "$(SignTenantId)" `
+          --azure-key-vault-client-id "$(SignClientId)" `
+          --azure-key-vault-client-secret "$(SignClientSecret)" `
           --azure-key-vault-certificate "$(SignCertFriendlyName)"
 
   # CHANGED: Use PublishBuildArtifacts for signed packages
@@ -903,6 +906,9 @@ jobs:
           --publisher-name "TorchSharp" `
           --description "TorchSharp" `
           --description-url "https://github.com/dotnet/TorchSharp" `
+          --azure-key-vault-tenant-id "$(SignTenantId)" `
+          --azure-key-vault-client-id "$(SignClientId)" `
+          --azure-key-vault-client-secret "$(SignClientSecret)" `
           --azure-key-vault-certificate "$(SignCertFriendlyName)"
 
   # CHANGED: Use PublishBuildArtifacts for signed Linux CUDA packages
