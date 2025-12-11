@@ -1,6 +1,12 @@
 ################################################################################
 # TorchSharp's PR validation build
 ################################################################################
+# 
+# IMPORTANT: This pipeline uses Build Artifacts (PublishBuildArtifacts/DownloadBuildArtifacts)
+# instead of Pipeline Artifacts to avoid dedup/hydration issues with large artifacts (3-8GB).
+# All artifacts are compressed before upload for improved reliability and stability.
+#
+################################################################################
 
 name: $(TeamProject)_$(Build.DefinitionName)_$(SourceBranchName)_$(Date:yyyyMMdd)$(Rev:.r)
 
@@ -158,8 +164,47 @@ jobs:
     displayName: Clean up unnecessary files before publish
     continueOnError: true
 
-  - publish: $(Build.SourcesDirectory)/bin/obj/packprep/$(BuildConfig)
-    artifact: LinuxAssets
+  # CHANGED: Compress artifacts before publishing to avoid dedup/hydration issues
+  # Using tar.gz for Linux artifacts - simple blob upload is more reliable than dedup
+  - script: |
+      cd $(Build.SourcesDirectory)/bin/obj/packprep/$(BuildConfig)
+      mkdir -p $(Build.ArtifactStagingDirectory)/LinuxAssets
+      # Compress TorchSharp separately
+      if [ -d "TorchSharp" ]; then
+        tar -czvf $(Build.ArtifactStagingDirectory)/LinuxAssets/TorchSharp.tar.gz TorchSharp
+      fi
+      # Compress TorchAudio separately
+      if [ -d "TorchAudio" ]; then
+        tar -czvf $(Build.ArtifactStagingDirectory)/LinuxAssets/TorchAudio.tar.gz TorchAudio
+      fi
+      # Compress TorchVision separately
+      if [ -d "TorchVision" ]; then
+        tar -czvf $(Build.ArtifactStagingDirectory)/LinuxAssets/TorchVision.tar.gz TorchVision
+      fi
+      # Compress libtorch-cpu assets separately if they exist
+      for dir in libtorch-cpu-*; do
+        if [ -d "$dir" ]; then
+          tar -czvf $(Build.ArtifactStagingDirectory)/LinuxAssets/${dir}.tar.gz "$dir"
+        fi
+      done
+      # Compress libtorch-cuda assets separately if they exist
+      for dir in libtorch-cuda-*; do
+        if [ -d "$dir" ]; then
+          tar -czvf $(Build.ArtifactStagingDirectory)/LinuxAssets/${dir}.tar.gz "$dir"
+        fi
+      done
+      ls -lh $(Build.ArtifactStagingDirectory)/LinuxAssets/
+      df -h
+    displayName: Compress Linux assets for stable upload
+
+  # CHANGED: Use PublishBuildArtifacts instead of publish (PublishPipelineArtifact)
+  # Build Artifacts use simple file blob storage - no dedup/hydration issues
+  - task: PublishBuildArtifacts@1
+    displayName: Publish Linux Assets (Build Artifact)
+    inputs:
+      pathToPublish: $(Build.ArtifactStagingDirectory)/LinuxAssets
+      artifactName: LinuxAssets
+      parallel: false  # Disable parallel upload for stability with large files
 
 ################################################################################
 - job: Windows_Native_Build_For_Packages
@@ -223,8 +268,54 @@ jobs:
     displayName: Clean up unnecessary files
     continueOnError: true
 
-  - publish: $(Build.SourcesDirectory)/bin/obj/packprep/$(BuildConfig)
-    artifact: WindowsAssets
+  # CHANGED: Compress artifacts before publishing to avoid dedup/hydration issues
+  # Using 7z for Windows artifacts - produces smaller archives and is reliable
+  - task: PowerShell@2
+    displayName: Compress Windows assets for stable upload
+    inputs:
+      targetType: 'inline'
+      script: |
+        $sourceDir = "$(Build.SourcesDirectory)\bin\obj\packprep\$(BuildConfig)"
+        $destDir = "$(Build.ArtifactStagingDirectory)\WindowsAssets"
+        New-Item -ItemType Directory -Force -Path $destDir | Out-Null
+        
+        # Compress TorchSharp
+        if (Test-Path "$sourceDir\TorchSharp") {
+          Write-Host "Compressing TorchSharp..."
+          7z a -tzip "$destDir\TorchSharp.zip" "$sourceDir\TorchSharp" -mx=5
+        }
+        # Compress TorchAudio
+        if (Test-Path "$sourceDir\TorchAudio") {
+          Write-Host "Compressing TorchAudio..."
+          7z a -tzip "$destDir\TorchAudio.zip" "$sourceDir\TorchAudio" -mx=5
+        }
+        # Compress TorchVision
+        if (Test-Path "$sourceDir\TorchVision") {
+          Write-Host "Compressing TorchVision..."
+          7z a -tzip "$destDir\TorchVision.zip" "$sourceDir\TorchVision" -mx=5
+        }
+        # Compress libtorch-cpu assets
+        Get-ChildItem -Path $sourceDir -Directory -Filter "libtorch-cpu-*" | ForEach-Object {
+          Write-Host "Compressing $($_.Name)..."
+          7z a -tzip "$destDir\$($_.Name).zip" "$($_.FullName)" -mx=5
+        }
+        # Compress libtorch-cuda assets
+        Get-ChildItem -Path $sourceDir -Directory -Filter "libtorch-cuda-*" | ForEach-Object {
+          Write-Host "Compressing $($_.Name)..."
+          7z a -tzip "$destDir\$($_.Name).zip" "$($_.FullName)" -mx=5
+        }
+        
+        Write-Host "Compressed files:"
+        Get-ChildItem $destDir | Format-Table Name, Length
+
+  # CHANGED: Use PublishBuildArtifacts instead of publish (PublishPipelineArtifact)
+  # Build Artifacts use simple file blob storage - no dedup/hydration issues
+  - task: PublishBuildArtifacts@1
+    displayName: Publish Windows Assets (Build Artifact)
+    inputs:
+      pathToPublish: $(Build.ArtifactStagingDirectory)/WindowsAssets
+      artifactName: WindowsAssets
+      parallel: false  # Disable parallel upload for stability with large files
 
 ################################################################################
 - job: MacOS_arm64_Native_Build_For_Packages
@@ -277,8 +368,41 @@ jobs:
     displayName: Clean up unnecessary files
     continueOnError: true
 
-  - publish: $(Build.SourcesDirectory)/bin/obj/packprep/$(BuildConfig)
-    artifact: MacAssets_arm64
+  # CHANGED: Compress artifacts before publishing to avoid dedup/hydration issues
+  # Using tar.gz for macOS artifacts - simple blob upload is more reliable than dedup
+  - script: |
+      cd $(Build.SourcesDirectory)/bin/obj/packprep/$(BuildConfig)
+      mkdir -p $(Build.ArtifactStagingDirectory)/MacAssets_arm64
+      # Compress TorchSharp separately
+      if [ -d "TorchSharp" ]; then
+        tar -czvf $(Build.ArtifactStagingDirectory)/MacAssets_arm64/TorchSharp.tar.gz TorchSharp
+      fi
+      # Compress TorchAudio separately
+      if [ -d "TorchAudio" ]; then
+        tar -czvf $(Build.ArtifactStagingDirectory)/MacAssets_arm64/TorchAudio.tar.gz TorchAudio
+      fi
+      # Compress TorchVision separately
+      if [ -d "TorchVision" ]; then
+        tar -czvf $(Build.ArtifactStagingDirectory)/MacAssets_arm64/TorchVision.tar.gz TorchVision
+      fi
+      # Compress libtorch-cpu assets separately if they exist
+      for dir in libtorch-cpu-*; do
+        if [ -d "$dir" ]; then
+          tar -czvf $(Build.ArtifactStagingDirectory)/MacAssets_arm64/${dir}.tar.gz "$dir"
+        fi
+      done
+      ls -lh $(Build.ArtifactStagingDirectory)/MacAssets_arm64/
+      df -h
+    displayName: Compress Mac assets for stable upload
+
+  # CHANGED: Use PublishBuildArtifacts instead of publish (PublishPipelineArtifact)
+  # Build Artifacts use simple file blob storage - no dedup/hydration issues
+  - task: PublishBuildArtifacts@1
+    displayName: Publish Mac Assets (Build Artifact)
+    inputs:
+      pathToPublish: $(Build.ArtifactStagingDirectory)/MacAssets_arm64
+      artifactName: MacAssets_arm64
+      parallel: false  # Disable parallel upload for stability with large files
 
 ################################################################################
 - job: Build_TorchSharp_And_libtorch_cpu_Packages
@@ -305,187 +429,97 @@ jobs:
     displayName: Clean up space (.git)
     continueOnError: true
 
-  # Download Linux assets in chunks
-  - task: DownloadPipelineArtifact@2
-    displayName: Download Linux TorchSharp assets
+  # CHANGED: Use DownloadBuildArtifacts instead of DownloadPipelineArtifact
+  # Download compressed Linux assets - Build Artifacts are more stable for large files
+  - task: DownloadBuildArtifacts@1
+    displayName: Download Linux Assets (Build Artifact)
     inputs:
-      artifact: LinuxAssets
-      patterns: |
-        TorchSharp/**
-      path: $(Pipeline.Workspace)/LinuxAssets
+      buildType: 'current'
+      downloadType: 'single'
+      artifactName: 'LinuxAssets'
+      downloadPath: $(Pipeline.Workspace)
     retryCountOnTaskFailure: 3
 
-  - task: DownloadPipelineArtifact@2
-    displayName: Download Linux TorchAudio assets
+  # Extract Linux assets - streaming-safe extraction
+  - task: PowerShell@2
+    displayName: Extract Linux assets
     inputs:
-      artifact: LinuxAssets
-      patterns: |
-        TorchAudio/**
-      path: $(Pipeline.Workspace)/LinuxAssets
-    retryCountOnTaskFailure: 3
+      targetType: 'inline'
+      script: |
+        $sourceDir = "$(Pipeline.Workspace)\LinuxAssets"
+        $destDir = "$(Build.SourcesDirectory)\bin\obj\packprep\$(BuildConfig)"
+        New-Item -ItemType Directory -Force -Path $destDir | Out-Null
+        
+        Write-Host "Extracting Linux assets from: $sourceDir"
+        Get-ChildItem -Path $sourceDir -Filter "*.tar.gz" | ForEach-Object {
+          Write-Host "Extracting $($_.Name)..."
+          # Use tar for extraction (available on Windows 10+)
+          tar -xzf $_.FullName -C $destDir
+        }
+        Write-Host "Extraction complete. Contents:"
+        Get-ChildItem $destDir | Format-Table Name
 
-  - task: DownloadPipelineArtifact@2
-    displayName: Download Linux TorchVision assets
-    inputs:
-      artifact: LinuxAssets
-      patterns: |
-        TorchVision/**
-      path: $(Pipeline.Workspace)/LinuxAssets
-    retryCountOnTaskFailure: 3
-
-  # Download libtorch assets if they exist
-  - task: DownloadPipelineArtifact@2
-    displayName: Download Linux libtorch-cpu assets
-    condition: eq('${{ parameters.BuildLibTorchPackages }}', true)
-    inputs:
-      artifact: LinuxAssets
-      patterns: |
-        libtorch-cpu-linux-x64/**
-      path: $(Pipeline.Workspace)/LinuxAssets
-    retryCountOnTaskFailure: 3
-    continueOnError: true
-
-  # Download CUDA assets if they exist (shouldn't be in this artifact but just in case)
-  - task: DownloadPipelineArtifact@2
-    displayName: Download any Linux CUDA assets (if present)
-    condition: eq('${{ parameters.BuildLibTorchPackages }}', true)
-    inputs:
-      artifact: LinuxAssets
-      patterns: |
-        libtorch-cuda-*-linux-x64/**
-      path: $(Pipeline.Workspace)/LinuxAssets
-    retryCountOnTaskFailure: 2
-    continueOnError: true
-
-  # Copy Linux assets to build directory
-  - task: CopyFiles@2
-    displayName: Copy linux native assets (TorchSharp) to correct folder
-    inputs:
-      sourceFolder: $(Pipeline.Workspace)/LinuxAssets/TorchSharp
-      targetFolder: $(Build.SourcesDirectory)/bin/obj/packprep/$(BuildConfig)/TorchSharp
-      cleanTargetFolder: false
-
-  - task: CopyFiles@2
-    displayName: Copy linux native assets (TorchAudio) to correct folder
-    inputs:
-      sourceFolder: $(Pipeline.Workspace)/LinuxAssets/TorchAudio
-      targetFolder: $(Build.SourcesDirectory)/bin/obj/packprep/$(BuildConfig)/TorchAudio
-      cleanTargetFolder: false
-
-  - task: CopyFiles@2
-    displayName: Copy linux native assets (TorchVision) to correct folder
-    inputs:
-      sourceFolder: $(Pipeline.Workspace)/LinuxAssets/TorchVision
-      targetFolder: $(Build.SourcesDirectory)/bin/obj/packprep/$(BuildConfig)/TorchVision
-      cleanTargetFolder: false
-
-  - task: CopyFiles@2
-    displayName: Copy linux native assets to correct folder
-    inputs:
-      sourceFolder: $(Pipeline.Workspace)/LinuxAssets
-      targetFolder: $(Build.SourcesDirectory)/bin/obj/packprep/$(BuildConfig)
-      cleanTargetFolder: false
-
+  # Clean up compressed Linux assets immediately after extraction
   - script: rmdir /s /q $(Pipeline.Workspace)\LinuxAssets
     displayName: Clean LinuxAssets immediately
     continueOnError: true
 
-  # Process Mac assets - download in chunks
-  - task: DownloadPipelineArtifact@2
-    displayName: Download Mac TorchSharp assets
+  # CHANGED: Download Mac assets using Build Artifacts
+  - task: DownloadBuildArtifacts@1
+    displayName: Download Mac Assets (Build Artifact)
     inputs:
-      artifact: MacAssets_arm64
-      patterns: |
-        TorchSharp/**
-      path: $(Pipeline.Workspace)/MacAssets_arm64
+      buildType: 'current'
+      downloadType: 'single'
+      artifactName: 'MacAssets_arm64'
+      downloadPath: $(Pipeline.Workspace)
     retryCountOnTaskFailure: 3
 
-  - task: DownloadPipelineArtifact@2
-    displayName: Download Mac TorchAudio assets
+  # Extract Mac assets - streaming-safe extraction
+  - task: PowerShell@2
+    displayName: Extract Mac assets
     inputs:
-      artifact: MacAssets_arm64
-      patterns: |
-        TorchAudio/**
-      path: $(Pipeline.Workspace)/MacAssets_arm64
-    retryCountOnTaskFailure: 3
-
-  - task: DownloadPipelineArtifact@2
-    displayName: Download Mac TorchVision assets
-    inputs:
-      artifact: MacAssets_arm64
-      patterns: |
-        TorchVision/**
-      path: $(Pipeline.Workspace)/MacAssets_arm64
-    retryCountOnTaskFailure: 3
-
-  # Download Mac libtorch assets if they exist
-  - task: DownloadPipelineArtifact@2
-    displayName: Download Mac libtorch-cpu assets (if present)
-    condition: eq('${{ parameters.BuildLibTorchPackages }}', true)
-    inputs:
-      artifact: MacAssets_arm64
-      patterns: |
-        libtorch-cpu-osx-arm64/**
-      path: $(Pipeline.Workspace)/MacAssets_arm64
-    retryCountOnTaskFailure: 2
-    continueOnError: true
-
-  - task: CopyFiles@2
-    displayName: Copy mac-arm64 native assets (batch)
-    inputs:
-      sourceFolder: $(Pipeline.Workspace)/MacAssets_arm64
-      targetFolder: $(Build.SourcesDirectory)/bin/obj/packprep/$(BuildConfig)
-      cleanTargetFolder: false
+      targetType: 'inline'
+      script: |
+        $sourceDir = "$(Pipeline.Workspace)\MacAssets_arm64"
+        $destDir = "$(Build.SourcesDirectory)\bin\obj\packprep\$(BuildConfig)"
+        
+        Write-Host "Extracting Mac assets from: $sourceDir"
+        Get-ChildItem -Path $sourceDir -Filter "*.tar.gz" | ForEach-Object {
+          Write-Host "Extracting $($_.Name)..."
+          tar -xzf $_.FullName -C $destDir
+        }
+        Write-Host "Extraction complete."
 
   - script: rmdir /s /q $(Pipeline.Workspace)\MacAssets_arm64
     displayName: Clean MacAssets immediately
     continueOnError: true
 
-  # Process Windows assets - download in chunks
-  - task: DownloadPipelineArtifact@2
-    displayName: Download Windows TorchSharp assets
+  # CHANGED: Download Windows assets using Build Artifacts
+  - task: DownloadBuildArtifacts@1
+    displayName: Download Windows Assets (Build Artifact)
     inputs:
-      artifact: WindowsAssets
-      patterns: |
-        TorchSharp/**
-      path: $(Pipeline.Workspace)/WindowsAssets
+      buildType: 'current'
+      downloadType: 'single'
+      artifactName: 'WindowsAssets'
+      downloadPath: $(Pipeline.Workspace)
     retryCountOnTaskFailure: 3
 
-  - task: DownloadPipelineArtifact@2
-    displayName: Download Windows TorchAudio assets
+  # Extract Windows assets - streaming-safe extraction using 7z
+  - task: PowerShell@2
+    displayName: Extract Windows assets
     inputs:
-      artifact: WindowsAssets
-      patterns: |
-        TorchAudio/**
-      path: $(Pipeline.Workspace)/WindowsAssets
-    retryCountOnTaskFailure: 3
-
-  - task: DownloadPipelineArtifact@2
-    displayName: Download Windows TorchVision assets
-    inputs:
-      artifact: WindowsAssets
-      patterns: |
-        TorchVision/**
-      path: $(Pipeline.Workspace)/WindowsAssets
-    retryCountOnTaskFailure: 3
-
-  - task: DownloadPipelineArtifact@2
-    displayName: Download Windows libtorch-cpu assets
-    condition: eq('${{ parameters.BuildLibTorchPackages }}', true)
-    inputs:
-      artifact: WindowsAssets
-      patterns: |
-        libtorch-cpu-win-x64/**
-      path: $(Pipeline.Workspace)/WindowsAssets
-    retryCountOnTaskFailure: 3
-    continueOnError: true
-
-  - task: CopyFiles@2
-    displayName: Copy windows native assets (batch)
-    inputs:
-      sourceFolder: $(Pipeline.Workspace)/WindowsAssets
-      targetFolder: $(Build.SourcesDirectory)/bin/obj/packprep/$(BuildConfig)
-      cleanTargetFolder: false
+      targetType: 'inline'
+      script: |
+        $sourceDir = "$(Pipeline.Workspace)\WindowsAssets"
+        $destDir = "$(Build.SourcesDirectory)\bin\obj\packprep\$(BuildConfig)"
+        
+        Write-Host "Extracting Windows assets from: $sourceDir"
+        Get-ChildItem -Path $sourceDir -Filter "*.zip" | ForEach-Object {
+          Write-Host "Extracting $($_.Name)..."
+          7z x $_.FullName -o"$destDir" -y
+        }
+        Write-Host "Extraction complete. Contents:"
+        Get-ChildItem $destDir | Format-Table Name
 
   - script: rmdir /s /q $(Pipeline.Workspace)\WindowsAssets
     displayName: Clean WindowsAssets immediately
@@ -514,13 +548,21 @@ jobs:
         **/*.nupkg
         !**/*.symbols.nupkg
 
-  - publish: $(Build.ArtifactStagingDirectory)
-    displayName: Publish build packages
-    artifact: BuildTorchSharpPackages
+  # CHANGED: Use PublishBuildArtifacts for final packages
+  - task: PublishBuildArtifacts@1
+    displayName: Publish build packages (Build Artifact)
+    inputs:
+      pathToPublish: $(Build.ArtifactStagingDirectory)
+      artifactName: BuildTorchSharpPackages
+      parallel: false
 
-  - publish: $(Build.SourcesDirectory)/config
-    displayName: Publish signing config
-    artifact: config
+  # CHANGED: Publish config using Build Artifacts
+  - task: PublishBuildArtifacts@1
+    displayName: Publish signing config (Build Artifact)
+    inputs:
+      pathToPublish: $(Build.SourcesDirectory)/config
+      artifactName: config
+      parallel: false
 
 ################################################################################
 # Only run if BuildLibTorchPackages is true
@@ -548,34 +590,32 @@ jobs:
     displayName: Final cleanup
     continueOnError: true
 
-  # Download Windows CUDA assets in smaller chunks
-  - task: DownloadPipelineArtifact@2
-    displayName: Download Windows CUDA 12.8 assets
+  # CHANGED: Download Windows assets using Build Artifacts (single download, no hydration issues)
+  - task: DownloadBuildArtifacts@1
+    displayName: Download Windows Assets (Build Artifact)
     inputs:
-      artifact: WindowsAssets
-      patterns: |
-        libtorch-cuda-12.8-win-x64/**
-      path: $(Pipeline.Workspace)/WindowsAssets
+      buildType: 'current'
+      downloadType: 'single'
+      artifactName: 'WindowsAssets'
+      downloadPath: $(Pipeline.Workspace)
     retryCountOnTaskFailure: 3
 
-  - task: DownloadPipelineArtifact@2
-    displayName: Download remaining Windows CUDA assets
+  # Extract only CUDA assets from the compressed archive
+  - task: PowerShell@2
+    displayName: Extract Windows CUDA assets
     inputs:
-      artifact: WindowsAssets
-      patterns: |
-        libtorch-cuda*/**
-        !libtorch-cuda-12.8-win-x64/**
-      path: $(Pipeline.Workspace)/WindowsAssets
-    retryCountOnTaskFailure: 3
-    continueOnError: true
-
-  - task: CopyFiles@2
-    displayName: Copy windows CUDA assets
-    inputs:
-      sourceFolder: $(Pipeline.Workspace)/WindowsAssets
-      targetFolder: $(Build.SourcesDirectory)/bin/obj/packprep/$(BuildConfig)
-      contents: |
-        libtorch-cuda*/**
+      targetType: 'inline'
+      script: |
+        $sourceDir = "$(Pipeline.Workspace)\WindowsAssets"
+        $destDir = "$(Build.SourcesDirectory)\bin\obj\packprep\$(BuildConfig)"
+        New-Item -ItemType Directory -Force -Path $destDir | Out-Null
+        
+        Write-Host "Extracting CUDA assets from: $sourceDir"
+        Get-ChildItem -Path $sourceDir -Filter "libtorch-cuda*.zip" | ForEach-Object {
+          Write-Host "Extracting $($_.Name)..."
+          7z x $_.FullName -o"$destDir" -y
+        }
+        Write-Host "Extraction complete."
 
   - script: rmdir /s /q $(Pipeline.Workspace)\WindowsAssets
     displayName: Clean workspace immediately
@@ -604,9 +644,13 @@ jobs:
         *cuda*.nupkg
         !*.symbols.nupkg
 
-  - publish: $(Build.ArtifactStagingDirectory)
-    displayName: Publish Windows CUDA packages
-    artifact: BuildWinCUDAPackages
+  # CHANGED: Use PublishBuildArtifacts for Windows CUDA packages
+  - task: PublishBuildArtifacts@1
+    displayName: Publish Windows CUDA packages (Build Artifact)
+    inputs:
+      pathToPublish: $(Build.ArtifactStagingDirectory)
+      artifactName: BuildWinCUDAPackages
+      parallel: false
 
 ################################################################################
 - job: Build_libtorch_cuda_linux_Packages
@@ -644,34 +688,30 @@ jobs:
     displayName: Final cleanup
     continueOnError: true
 
-  # Download Linux CUDA assets in smaller chunks
-  - task: DownloadPipelineArtifact@2
-    displayName: Download Linux CUDA 12.8 assets
+  # CHANGED: Download Linux assets using Build Artifacts (single download, no hydration issues)
+  - task: DownloadBuildArtifacts@1
+    displayName: Download Linux Assets (Build Artifact)
     inputs:
-      artifact: LinuxAssets
-      patterns: |
-        libtorch-cuda-12.8-linux-x64/**
-      path: $(Pipeline.Workspace)/LinuxAssets
+      buildType: 'current'
+      downloadType: 'single'
+      artifactName: 'LinuxAssets'
+      downloadPath: $(Pipeline.Workspace)
     retryCountOnTaskFailure: 3
 
-  - task: DownloadPipelineArtifact@2
-    displayName: Download remaining Linux CUDA assets
-    inputs:
-      artifact: LinuxAssets
-      patterns: |
-        libtorch-cuda*/**
-        !libtorch-cuda-12.8-linux-x64/**
-      path: $(Pipeline.Workspace)/LinuxAssets
-    retryCountOnTaskFailure: 3
-    continueOnError: true
-
-  - task: CopyFiles@2
-    displayName: Copy linux CUDA assets
-    inputs:
-      sourceFolder: $(Pipeline.Workspace)/LinuxAssets
-      targetFolder: $(Build.SourcesDirectory)/bin/obj/packprep/$(BuildConfig)
-      contents: |
-        libtorch-cuda*/**
+  # Extract only CUDA assets from the compressed archive
+  - script: |
+      mkdir -p $(Build.SourcesDirectory)/bin/obj/packprep/$(BuildConfig)
+      cd $(Pipeline.Workspace)/LinuxAssets
+      echo "Extracting CUDA assets..."
+      for archive in libtorch-cuda*.tar.gz; do
+        if [ -f "$archive" ]; then
+          echo "Extracting $archive..."
+          tar -xzf "$archive" -C $(Build.SourcesDirectory)/bin/obj/packprep/$(BuildConfig)
+        fi
+      done
+      echo "Extraction complete."
+      ls -la $(Build.SourcesDirectory)/bin/obj/packprep/$(BuildConfig)/
+    displayName: Extract Linux CUDA assets
 
   - script: rm -rf $(Pipeline.Workspace)/LinuxAssets
     displayName: Clean workspace immediately
@@ -701,9 +741,13 @@ jobs:
         *cuda*.nupkg
         !*.symbols.nupkg
 
-  - publish: $(Build.ArtifactStagingDirectory)
-    displayName: Publish Linux CUDA packages
-    artifact: BuildLinuxCUDAPackages
+  # CHANGED: Use PublishBuildArtifacts for Linux CUDA packages
+  - task: PublishBuildArtifacts@1
+    displayName: Publish Linux CUDA packages (Build Artifact)
+    inputs:
+      pathToPublish: $(Build.ArtifactStagingDirectory)
+      artifactName: BuildLinuxCUDAPackages
+      parallel: false
 
 ################################################################################
 - job: CodeSign_Core
@@ -724,13 +768,24 @@ jobs:
       arguments: install --tool-path . --prerelease sign
     displayName: Install SignTool tool
 
-  - download: current
-    displayName: Download configuration
-    artifact: config
+  # CHANGED: Use DownloadBuildArtifacts instead of download
+  - task: DownloadBuildArtifacts@1
+    displayName: Download configuration (Build Artifact)
+    inputs:
+      buildType: 'current'
+      downloadType: 'single'
+      artifactName: 'config'
+      downloadPath: $(Pipeline.Workspace)
 
-  - download: current
-    displayName: Download TorchSharp Packages
-    artifact: BuildTorchSharpPackages
+  # CHANGED: Use DownloadBuildArtifacts instead of download
+  - task: DownloadBuildArtifacts@1
+    displayName: Download TorchSharp Packages (Build Artifact)
+    inputs:
+      buildType: 'current'
+      downloadType: 'single'
+      artifactName: 'BuildTorchSharpPackages'
+      downloadPath: $(Pipeline.Workspace)
+    retryCountOnTaskFailure: 3
 
   - task: PowerShell@2
     displayName: Sign packages
@@ -749,9 +804,13 @@ jobs:
           --azure-key-vault-client-secret "$(SignClientSecret)" `
           --azure-key-vault-certificate "$(SignCertFriendlyName)"
 
-  - publish: $(Pipeline.Workspace)/BuildTorchSharpPackages
-    displayName: Publish Signed TorchSharp Packages
-    artifact: SignedTorchSharpPackages
+  # CHANGED: Use PublishBuildArtifacts for signed packages
+  - task: PublishBuildArtifacts@1
+    displayName: Publish Signed TorchSharp Packages (Build Artifact)
+    inputs:
+      pathToPublish: $(Pipeline.Workspace)/BuildTorchSharpPackages
+      artifactName: SignedTorchSharpPackages
+      parallel: false
     continueOnError: true
 
   - script: rmdir /s /q  $(Pipeline.Workspace)\BuildTorchSharpPackages
@@ -777,13 +836,24 @@ jobs:
       arguments: install --tool-path . --prerelease sign
     displayName: Install SignTool tool
 
-  - download: current
-    displayName: Download configuration
-    artifact: config
+  # CHANGED: Use DownloadBuildArtifacts instead of download
+  - task: DownloadBuildArtifacts@1
+    displayName: Download configuration (Build Artifact)
+    inputs:
+      buildType: 'current'
+      downloadType: 'single'
+      artifactName: 'config'
+      downloadPath: $(Pipeline.Workspace)
 
-  - download: current
-    displayName: Download Windows CUDA Packages
-    artifact: BuildWinCUDAPackages
+  # CHANGED: Use DownloadBuildArtifacts instead of download
+  - task: DownloadBuildArtifacts@1
+    displayName: Download Windows CUDA Packages (Build Artifact)
+    inputs:
+      buildType: 'current'
+      downloadType: 'single'
+      artifactName: 'BuildWinCUDAPackages'
+      downloadPath: $(Pipeline.Workspace)
+    retryCountOnTaskFailure: 3
 
   - task: PowerShell@2
     displayName: Sign packages
@@ -802,17 +872,27 @@ jobs:
           --azure-key-vault-client-secret "$(SignClientSecret)" `
           --azure-key-vault-certificate "$(SignCertFriendlyName)"
 
-  - publish: $(Pipeline.Workspace)/BuildWinCUDAPackages
-    displayName: Publish Signed Windows CUDA Packages
-    artifact: SignedWinCUDAPackages
+  # CHANGED: Use PublishBuildArtifacts for signed Windows CUDA packages
+  - task: PublishBuildArtifacts@1
+    displayName: Publish Signed Windows CUDA Packages (Build Artifact)
+    inputs:
+      pathToPublish: $(Pipeline.Workspace)/BuildWinCUDAPackages
+      artifactName: SignedWinCUDAPackages
+      parallel: false
     continueOnError: true
 
   - script: rmdir /s /q  $(Pipeline.Workspace)\BuildWinCUDAPackages
     displayName: Free up space (TorchSharp packages in workspace)
 
-  - download: current
-    displayName: Download Linux CUDA Packages
-    artifact: BuildLinuxCUDAPackages
+  # CHANGED: Use DownloadBuildArtifacts instead of download
+  - task: DownloadBuildArtifacts@1
+    displayName: Download Linux CUDA Packages (Build Artifact)
+    inputs:
+      buildType: 'current'
+      downloadType: 'single'
+      artifactName: 'BuildLinuxCUDAPackages'
+      downloadPath: $(Pipeline.Workspace)
+    retryCountOnTaskFailure: 3
 
   - task: PowerShell@2
     displayName: Sign packages with Sign CLI
@@ -831,9 +911,13 @@ jobs:
           --azure-key-vault-client-secret "$(SignClientSecret)" `
           --azure-key-vault-certificate "$(SignCertFriendlyName)"
 
-  - publish: $(Pipeline.Workspace)/BuildLinuxCUDAPackages
-    displayName: Publish Signed Linux CUDA Packages
-    artifact: SignedLinuxCUDAPackages
+  # CHANGED: Use PublishBuildArtifacts for signed Linux CUDA packages
+  - task: PublishBuildArtifacts@1
+    displayName: Publish Signed Linux CUDA Packages (Build Artifact)
+    inputs:
+      pathToPublish: $(Pipeline.Workspace)/BuildLinuxCUDAPackages
+      artifactName: SignedLinuxCUDAPackages
+      parallel: false
     continueOnError: true
 
   - script: rmdir /s /q  $(Pipeline.Workspace)\BuildLinuxCUDAPackages
@@ -864,9 +948,15 @@ jobs:
   - task: NuGetAuthenticate@0
     displayName: 'NuGet Authenticate'
 
-  - download: current
-    displayName: Download Signed TorchSharp Packages
-    artifact: SignedTorchSharpPackages
+  # CHANGED: Use DownloadBuildArtifacts instead of download
+  - task: DownloadBuildArtifacts@1
+    displayName: Download Signed TorchSharp Packages (Build Artifact)
+    inputs:
+      buildType: 'current'
+      downloadType: 'single'
+      artifactName: 'SignedTorchSharpPackages'
+      downloadPath: $(Pipeline.Workspace)
+    retryCountOnTaskFailure: 3
 
   - task: NuGetCommand@2
     displayName: 'NuGet push (TorchSharp)'
@@ -965,9 +1055,15 @@ jobs:
   - task: NuGetAuthenticate@0
     displayName: 'NuGet Authenticate'
 
-  - download: current
-    displayName: Download Signed Windows CUDA Packages
-    artifact: SignedWinCUDAPackages
+  # CHANGED: Use DownloadBuildArtifacts instead of download
+  - task: DownloadBuildArtifacts@1
+    displayName: Download Signed Windows CUDA Packages (Build Artifact)
+    inputs:
+      buildType: 'current'
+      downloadType: 'single'
+      artifactName: 'SignedWinCUDAPackages'
+      downloadPath: $(Pipeline.Workspace)
+    retryCountOnTaskFailure: 3
 
   # push the Windows Cuda packages
   - task: NuGetCommand@2
@@ -1052,9 +1148,15 @@ jobs:
   - task: NuGetAuthenticate@0
     displayName: 'NuGet Authenticate'
 
-  - download: current
-    displayName: Download Signed Linux CUDA Packages
-    artifact: SignedLinuxCUDAPackages
+  # CHANGED: Use DownloadBuildArtifacts instead of download
+  - task: DownloadBuildArtifacts@1
+    displayName: Download Signed Linux CUDA Packages (Build Artifact)
+    inputs:
+      buildType: 'current'
+      downloadType: 'single'
+      artifactName: 'SignedLinuxCUDAPackages'
+      downloadPath: $(Pipeline.Workspace)
+    retryCountOnTaskFailure: 3
 
   # push the Linux Cuda packages
   - task: NuGetCommand@2
