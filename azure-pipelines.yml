@@ -787,21 +787,22 @@ jobs:
       downloadPath: $(Pipeline.Workspace)
     retryCountOnTaskFailure: 3
 
-  - task: PowerShell@2
+  # CHANGED: Use AzureCLI@2 task for signing - client secret is deprecated
+  # Requires an Azure service connection with workload identity federation
+  - task: AzureCLI@2
     displayName: Sign packages
     inputs:
-      targetType: 'inline'
-      script: |
-        & .\sign code azure-key-vault '**/*.nupkg' `
+      azureSubscription: '$(SignServiceConnection)'  # Set this variable to your Azure service connection name
+      scriptType: 'pscore'
+      scriptLocation: 'inlineScript'
+      inlineScript: |
+        .\sign code azure-key-vault '**/*.nupkg' `
           --base-directory "$(Pipeline.Workspace)\BuildTorchSharpPackages" `
           --file-list "$(Pipeline.Workspace)\config\signedfiles.txt" `
           --azure-key-vault-url "$(SignVaultURL)" `
           --publisher-name "TorchSharp" `
           --description "TorchSharp" `
           --description-url "https://github.com/dotnet/TorchSharp" `
-          --azure-key-vault-tenant-id "$(SignTenantId)" `
-          --azure-key-vault-client-id "$(SignClientId)" `
-          --azure-key-vault-client-secret "$(SignClientSecret)" `
           --azure-key-vault-certificate "$(SignCertFriendlyName)"
 
   # CHANGED: Use PublishBuildArtifacts for signed packages
@@ -855,21 +856,21 @@ jobs:
       downloadPath: $(Pipeline.Workspace)
     retryCountOnTaskFailure: 3
 
-  - task: PowerShell@2
+  # CHANGED: Use AzureCLI@2 task for signing - client secret is deprecated
+  - task: AzureCLI@2
     displayName: Sign packages
     inputs:
-      targetType: 'inline'
-      script: |
-        & .\sign code azure-key-vault '**/*.nupkg' `
+      azureSubscription: '$(SignServiceConnection)'
+      scriptType: 'pscore'
+      scriptLocation: 'inlineScript'
+      inlineScript: |
+        .\sign code azure-key-vault '**/*.nupkg' `
           --base-directory "$(Pipeline.Workspace)\BuildWinCUDAPackages" `
           --file-list "$(Pipeline.Workspace)\config\signedfiles.txt" `
           --azure-key-vault-url "$(SignVaultURL)" `
           --publisher-name "TorchSharp" `
           --description "TorchSharp" `
           --description-url "https://github.com/dotnet/TorchSharp" `
-          --azure-key-vault-tenant-id "$(SignTenantId)"  `
-          --azure-key-vault-client-id "$(SignClientId)" `
-          --azure-key-vault-client-secret "$(SignClientSecret)" `
           --azure-key-vault-certificate "$(SignCertFriendlyName)"
 
   # CHANGED: Use PublishBuildArtifacts for signed Windows CUDA packages
@@ -894,21 +895,21 @@ jobs:
       downloadPath: $(Pipeline.Workspace)
     retryCountOnTaskFailure: 3
 
-  - task: PowerShell@2
+  # CHANGED: Use AzureCLI@2 task for signing - client secret is deprecated
+  - task: AzureCLI@2
     displayName: Sign packages with Sign CLI
     inputs:
-      targetType: 'inline'
-      script: |
-        & .\sign code azure-key-vault '**/*.nupkg' `
+      azureSubscription: '$(SignServiceConnection)'
+      scriptType: 'pscore'
+      scriptLocation: 'inlineScript'
+      inlineScript: |
+        .\sign code azure-key-vault '**/*.nupkg' `
           --base-directory "$(Pipeline.Workspace)\BuildLinuxCUDAPackages" `
           --file-list "$(Pipeline.Workspace)\config\signedfiles.txt" `
           --azure-key-vault-url "$(SignVaultURL)" `
           --publisher-name "TorchSharp" `
           --description "TorchSharp" `
           --description-url "https://github.com/dotnet/TorchSharp" `
-          --azure-key-vault-tenant-id "$(SignTenantId)" `
-          --azure-key-vault-client-id "$(SignClientId)" `
-          --azure-key-vault-client-secret "$(SignClientSecret)" `
           --azure-key-vault-certificate "$(SignCertFriendlyName)"
 
   # CHANGED: Use PublishBuildArtifacts for signed Linux CUDA packages
