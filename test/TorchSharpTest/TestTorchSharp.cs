@@ -662,7 +662,8 @@ namespace TorchSharp
         public void QuantizePerChannel()
         {
             // Create a 2D tensor: 2 channels x 3 elements
-            var floatTensor = torch.tensor(new float[] { 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f }).reshape(2, 3);
+            using var baseTensor = torch.tensor(new float[] { 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f });
+            var floatTensor = baseTensor.reshape(2, 3);
             var scales = torch.tensor(new double[] { 0.1, 0.2 });
             var zeroPoints = torch.tensor(new long[] { 0, 0 });
 

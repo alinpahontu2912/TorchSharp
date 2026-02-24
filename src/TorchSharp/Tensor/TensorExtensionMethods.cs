@@ -303,6 +303,9 @@ namespace TorchSharp
                 ScalarType.ComplexFloat32 => 8,
                 ScalarType.ComplexFloat64 => 16,
                 ScalarType.Bool => 1,
+                ScalarType.QInt8 => 1,
+                ScalarType.QUInt8 => 1,
+                ScalarType.QInt32 => 4,
                 ScalarType.BFloat16 => 2,
                 _ => throw new NotImplementedException()
             };
